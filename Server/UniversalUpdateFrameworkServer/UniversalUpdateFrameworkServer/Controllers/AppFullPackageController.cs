@@ -1,0 +1,172 @@
+﻿using System.Net;
+using System.Runtime.InteropServices.JavaScript;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UniversalUpdateFrameworkServer.DataManager;
+
+namespace UniversalUpdateFrameworkServer.Controllers;
+
+[ApiController]
+[Route("api/v1")]
+public class AppFullPackageController : ControllerBase
+{
+    private readonly ILogger<AppFullPackageController> _logger;
+
+    private AppFullPackageDataManager m_AppFullPackageDataManager;
+
+    public AppFullPackageController(ILogger<AppFullPackageController> logger)
+    {
+        _logger = logger;
+
+        m_AppFullPackageDataManager = new AppFullPackageDataManager("appdata");
+    }
+
+    [HttpGet("GetCurrentAppFullPackage")]
+    public JsonResult GetCurrentAppFullPackage(string appname)
+    {
+        try
+        {
+            var jObject = m_AppFullPackageDataManager.GetCurrentData(appname);
+            string jsonString = jObject.ToString();
+            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
+            JsonElement rootElement = jsonDocument.RootElement;
+
+            return new JsonResult(rootElement);
+        }
+        catch(Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+    [HttpGet("GetAppFullPackage")]
+    public JsonResult GetAppFullPackage(string appname, string version)
+    {
+        try{
+            var jObject = m_AppFullPackageDataManager.GetData(appname, version);
+            string jsonString = jObject.ToString();
+            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
+            JsonElement rootElement = jsonDocument.RootElement;
+
+            return new JsonResult(rootElement);
+        }
+        catch(Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+    [HttpGet("DownloadCurrentFullPackage")]
+    public async Task<IActionResult> DownloadCurrentFullPackage(string appname)
+    {
+        var fullPackageFileInfo = m_AppFullPackageDataManager.GetCurrentFullPackageFilePath(appname);
+        var fileFullPath = fullPackageFileInfo.filePath;
+        
+        if (!System.IO.File.Exists(fileFullPath))
+        {
+            return new EmptyResult();
+        }
+        
+        var fileInfo = new FileInfo(fileFullPath);
+        var contentType = "application/octet-stream";
+        var fileName = fileInfo.Name;
+        var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        var contentLength = fileStream.Length;
+        var range = Request.Headers["Range"].ToString();
+        if (!string.IsNullOrEmpty(range))
+        {
+            var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+            var start = long.Parse(match.Groups[1].Value);
+            var end = string.IsNullOrEmpty(match.Groups[2].Value) ? contentLength - 1 : long.Parse(match.Groups[2].Value);
+            contentLength = end - start + 1;
+            fileStream.Seek(start, SeekOrigin.Begin);
+            Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+            Response.StatusCode = (int)HttpStatusCode.PartialContent;
+        }
+        Response.Headers.Add("Accept-Ranges", "bytes");
+        Response.ContentType = contentType;
+        Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+        Response.Headers.Add("Content-Length", contentLength.ToString());
+        await fileStream.CopyToAsync(Response.Body);
+        return new EmptyResult();
+    }
+    
+    [HttpGet("DownloadFullPackage")]
+    public async Task<IActionResult> DownloadFullPackage(string appname, string appversion)
+    {
+        var fullPackageFileInfo = m_AppFullPackageDataManager.GetFullPackageFilePath(appname, appversion);
+        var fileFullPath = fullPackageFileInfo.filePath;
+        
+        if (!System.IO.File.Exists(fileFullPath))
+        {
+            return new EmptyResult();
+        }
+        
+        var fileInfo = new FileInfo(fileFullPath);
+        var contentType = "application/octet-stream";
+        var fileName = fileInfo.Name;
+        var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        var contentLength = fileStream.Length;
+        var range = Request.Headers["Range"].ToString();
+        if (!string.IsNullOrEmpty(range))
+        {
+            var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+            var start = long.Parse(match.Groups[1].Value);
+            var end = string.IsNullOrEmpty(match.Groups[2].Value) ? contentLength - 1 : long.Parse(match.Groups[2].Value);
+            contentLength = end - start + 1;
+            fileStream.Seek(start, SeekOrigin.Begin);
+            Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+            Response.StatusCode = (int)HttpStatusCode.PartialContent;
+        }
+        Response.Headers.Add("Accept-Ranges", "bytes");
+        Response.ContentType = contentType;
+        Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+        Response.Headers.Add("Content-Length", contentLength.ToString());
+        await fileStream.CopyToAsync(Response.Body);
+        return new EmptyResult();
+    }
+    
+    [HttpGet("DownloadFileFromFullPackage")]
+    public async Task<IActionResult> DownloadFileFromFullPackage(string appname, string appversion, string md5)
+    {
+        var fullPackageFileInfo = m_AppFullPackageDataManager.GetFileFromFullPackageFilePath(appname, appversion, md5);
+
+        if (fullPackageFileInfo.filePath == "")
+        {
+            return new EmptyResult();
+        }
+        
+        var fileFullPath = fullPackageFileInfo.filePath;
+        
+        if (!System.IO.File.Exists(fileFullPath))
+        {
+            return new EmptyResult();
+        }
+        
+        var fileInfo = new FileInfo(fileFullPath);
+        var contentType = "application/octet-stream";
+        var fileName = fileInfo.Name;
+        var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        var contentLength = fileStream.Length;
+        var range = Request.Headers["Range"].ToString();
+        if (!string.IsNullOrEmpty(range))
+        {
+            var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+            var start = long.Parse(match.Groups[1].Value);
+            var end = string.IsNullOrEmpty(match.Groups[2].Value) ? contentLength - 1 : long.Parse(match.Groups[2].Value);
+            contentLength = end - start + 1;
+            fileStream.Seek(start, SeekOrigin.Begin);
+            Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+            Response.StatusCode = (int)HttpStatusCode.PartialContent;
+        }
+        Response.Headers.Add("Accept-Ranges", "bytes");
+        Response.ContentType = contentType;
+        Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+        Response.Headers.Add("Content-Length", contentLength.ToString());
+        await fileStream.CopyToAsync(Response.Body);
+        return new EmptyResult();
+    }
+}

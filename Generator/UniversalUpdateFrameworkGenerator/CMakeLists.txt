@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
-project(UniversalUpdateFrameworkClient)
+project(UniversalUpdateFrameworkGenerator)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -10,13 +10,14 @@ include_directories(
 )
 
 set(ProjectHeader
-
+    md5.h
 
 )
 
 set(ProjectSource
         main.cpp
+        md5.cpp
 
 )
 
-add_executable(UniversalUpdateFrameworkClient ${ProjectHeader} ${ProjectSource})
+add_executable(UniversalUpdateFrameworkGenerator ${ProjectHeader} ${ProjectSource})
