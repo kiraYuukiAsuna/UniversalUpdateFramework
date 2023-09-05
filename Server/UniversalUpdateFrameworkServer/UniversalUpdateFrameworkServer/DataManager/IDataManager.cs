@@ -14,8 +14,22 @@ public static class DataManagerUtil
 {
     public static JObject getCurrentData(string appFolderPath, string appname, string filename)
     {
-        string currentVersionFolderPath = Path.Combine(appFolderPath, "current");
+        string currentVersionFolderName = "";
         string appVersionFilePath = "";
+        
+        var currentJsonConfigFilePath = Path.Combine(appFolderPath, "current.json");
+        if (File.Exists(currentJsonConfigFilePath))
+        {
+            string currentFileContent = File.ReadAllText(currentJsonConfigFilePath);
+            var obj = JObject.Parse(currentFileContent);
+            if (obj.ContainsKey("current_version"))
+            {
+                currentVersionFolderName = obj["current_version"].ToString();
+            }
+        }
+
+        var currentVersionFolderPath = Path.Combine(appFolderPath, currentVersionFolderName);
+        
         if (!Directory.Exists(currentVersionFolderPath))
         {
             var versionFolders = Directory.GetDirectories(appFolderPath)
