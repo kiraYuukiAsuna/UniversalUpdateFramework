@@ -22,9 +22,9 @@ public static class DataManagerUtil
         {
             string currentFileContent = File.ReadAllText(currentJsonConfigFilePath);
             var obj = JObject.Parse(currentFileContent);
-            if (obj.ContainsKey("current_version"))
+            if (obj.ContainsKey("version"))
             {
-                currentVersionFolderName = obj["current_version"].ToString();
+                currentVersionFolderName = obj["version"].ToString();
             }
         }
 

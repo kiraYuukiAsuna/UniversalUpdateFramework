@@ -6,6 +6,7 @@ public struct DifferencePackageFileInfo
 {
     public string filePath;
     public string md5;
+    public string version;
 }
 
 public class AppDifferencePackageDataManager : IDataManager
@@ -47,10 +48,12 @@ public class AppDifferencePackageDataManager : IDataManager
 
         var filename = jObject["filename"];
         var md5 = jObject["md5"];
+        var version = jObject["appversion"];
 
         DifferencePackageFileInfo info;
-        info.filePath = Path.Combine(getAppFolderPath(appname), "current",filename.ToString());
+        info.filePath = Path.Combine(getAppFolderPath(appname), version.ToString(),filename.ToString());
         info.md5 = md5.ToString();
+        info.version = version.ToString();
         
         return info;
     }
@@ -61,10 +64,12 @@ public class AppDifferencePackageDataManager : IDataManager
 
         var filename = jObject["filename"];
         var md5 = jObject["md5"];
+        var version = jObject["appversion"];
 
         DifferencePackageFileInfo info;
         info.filePath = Path.Combine(getAppFolderPath(appname), appversion, filename.ToString());
         info.md5 = md5.ToString();
+        info.version = version.ToString();
         
         return info;
     }
