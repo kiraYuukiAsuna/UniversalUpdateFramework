@@ -10,12 +10,13 @@ include_directories(
 )
 
 set(ProjectHeader
-
+    UpdateCore.h
 
 )
 
 set(ProjectSource
         main.cpp
+        UpdateCore.cpp
 
 )
 
