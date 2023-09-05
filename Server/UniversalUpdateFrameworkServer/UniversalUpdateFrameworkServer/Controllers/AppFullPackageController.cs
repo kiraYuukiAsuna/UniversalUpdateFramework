@@ -43,10 +43,10 @@ public class AppFullPackageController : ControllerBase
     }
     
     [HttpGet("GetAppFullPackage")]
-    public JsonResult GetAppFullPackage(string appname, string version)
+    public JsonResult GetAppFullPackage(string appname, string appversion)
     {
         try{
-            var jObject = m_AppFullPackageDataManager.GetData(appname, version);
+            var jObject = m_AppFullPackageDataManager.GetData(appname, appversion);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;

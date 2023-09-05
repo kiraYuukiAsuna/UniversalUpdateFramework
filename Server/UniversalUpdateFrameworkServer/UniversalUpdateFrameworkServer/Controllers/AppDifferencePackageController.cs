@@ -43,10 +43,10 @@ public class AppDifferencePackageController : ControllerBase
     }
     
     [HttpGet("GetAppDifferencePackage")]
-    public JsonResult GetAppDifferencePackage(string appname, string version)
+    public JsonResult GetAppDifferencePackage(string appname, string appversion)
     {
         try{
-            var jObject = m_AppDifferencePackageDataManager.GetData(appname, version);
+            var jObject = m_AppDifferencePackageDataManager.GetData(appname, appversion);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;

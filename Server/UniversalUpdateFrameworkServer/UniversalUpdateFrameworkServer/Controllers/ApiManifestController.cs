@@ -42,10 +42,10 @@ public class AppManifestController : ControllerBase
     }
     
     [HttpGet("GetAppManifest")]
-    public JsonResult GetAppManifest(string appname, string version)
+    public JsonResult GetAppManifest(string appname, string appversion)
     {
         try{
-            var jObject = m_AppManifestDataManager.GetData(appname, version);
+            var jObject = m_AppManifestDataManager.GetData(appname, appversion);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;

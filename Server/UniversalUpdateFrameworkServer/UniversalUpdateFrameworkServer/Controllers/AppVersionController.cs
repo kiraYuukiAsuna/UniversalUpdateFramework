@@ -42,10 +42,10 @@ public class AppVersionController : ControllerBase
     }
     
     [HttpGet("GetAppVersion")]
-    public JsonResult GetAppVersion(string appname, string version)
+    public JsonResult GetAppVersion(string appname, string appversion)
     {
         try{
-            var jObject = m_AppVersionDataManager.GetData(appname, version);
+            var jObject = m_AppVersionDataManager.GetData(appname, appversion);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;

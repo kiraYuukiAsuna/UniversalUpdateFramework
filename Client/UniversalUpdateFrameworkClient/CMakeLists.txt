@@ -7,16 +7,21 @@ include_directories(
         ../../ThirdParty/nlohmann_json
         ../../ThirdParty/httplib
         ../../ThirdParty/cxxopts
+        ../../Common/md5
+        ../../Common/util
 )
 
 set(ProjectHeader
-    UpdateCore.h
+        UpdateCore.h
+        ../../Common/md5/md5.h
+        ../../Common/util/util.hpp
 
 )
 
 set(ProjectSource
         main.cpp
         UpdateCore.cpp
+        ../../Common/md5/md5.cpp
 
 )
 
