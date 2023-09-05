@@ -126,7 +126,6 @@ bool generateDifferencePackageManifestFile(std::filesystem::path appversionFolde
     appfullpackagemanifestJson["appname"] = info.appname;
     appfullpackagemanifestJson["appversion"] = info.appversion;
     appfullpackagemanifestJson["filename"] = "appdifferencepackage";
-    appfullpackagemanifestJson["md5"] = calcMd5(appdifferencepackagemanifestFile.string());
     appfullpackagemanifestJson["appbeforeversion"] = info.appbeforeversion;
 
     appfullpackagemanifestJson["diff_updatefiles"];
@@ -235,7 +234,7 @@ bool generateDifferencePackageManifestFile(std::filesystem::path appversionFolde
 
     system(shellCommand.c_str());
 
-
+    appfullpackagemanifestJson["md5"] = calcMd5(differencePackageFile.string());
 
     return true;
 }
