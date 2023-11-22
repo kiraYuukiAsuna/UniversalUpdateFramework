@@ -1,15 +1,14 @@
 #include <iostream>
-#include "UpdateCore.h"
-#include "md5.h"
+#include "UpdateLogic/FullpackageUpdate.h"
+#include "UpdateLogic/DifferencePackageUpdate.h"
 
 int main() {
-
-    ApiRequest api("http://192.168.0.114:5275", "GameApp1");
-
-    
-
-
-
+    try {
+        DifferencePackageUpdate update("http://api.kirayuukiasuna.cloud", "EditorDemo", "EditorDemo");
+        update.execute();
+    }catch (std::exception& e){
+        std::cerr<<e.what()<<"\n";
+    }
 
     return 0;
 }

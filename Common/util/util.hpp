@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <ranges>
+#include <fstream>
+#include <filesystem>
 
 namespace util {
 
@@ -12,6 +14,16 @@ namespace util {
             tokens.emplace_back(token.begin(), token.end());
         }
         return tokens;
+    }
+
+    inline bool saveToFile(const std::string &content, std::filesystem::path path) {
+        std::ofstream outfile(path);
+        if (!outfile.is_open()) {
+            return false;
+        }
+        outfile << content;
+        outfile.close();
+        return true;
     }
 
 }

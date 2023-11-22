@@ -222,9 +222,6 @@ bool generateDifferencePackageManifestFile(std::filesystem::path appversionFolde
     }
     std::cout << std::endl;
 
-    appdifferencepackagemanifestFileFileStream << appfullpackagemanifestJson;
-    appdifferencepackagemanifestFileFileStream.close();
-
     std::filesystem::path differencePackageFile = appversionFolder / "appdifferencepackage";
     if(std::filesystem::exists(differencePackageFile)){
         std::filesystem::remove(differencePackageFile);
@@ -235,6 +232,9 @@ bool generateDifferencePackageManifestFile(std::filesystem::path appversionFolde
     system(shellCommand.c_str());
 
     appfullpackagemanifestJson["md5"] = calcMd5(differencePackageFile.string());
+
+    appdifferencepackagemanifestFileFileStream << appfullpackagemanifestJson;
+    appdifferencepackagemanifestFileFileStream.close();
 
     return true;
 }

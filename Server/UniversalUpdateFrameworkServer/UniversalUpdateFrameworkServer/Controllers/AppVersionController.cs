@@ -57,4 +57,24 @@ public class AppVersionController : ControllerBase
             return new JsonResult(ex.ToString());
         }
     }
+    
+    [HttpGet("GetAppVersionList")]
+    public JsonResult GetAppVersionList(string appname)
+    {
+        try
+        {
+            var appVersionList = m_AppVersionDataManager.GetAppVersionList(appname);
+
+            string jObject = JsonConvert.SerializeObject(appVersionList);
+            string jsonString = jObject.ToString();
+            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
+            JsonElement rootElement = jsonDocument.RootElement;
+            
+            return new JsonResult(rootElement);
+        }
+        catch(Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
 }

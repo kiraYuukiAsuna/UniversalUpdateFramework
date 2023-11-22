@@ -33,4 +33,25 @@ public class AppVersionDataManager : IDataManager
             return DataManagerUtil.getData(getAppFolderPath(appname), appname, appversion, "appversion.json");
         }
     }
+
+    public List<string> GetAppVersionList(string appname)
+    {
+        lock (m_Mutex)
+        {
+            var appVersionList = new List<string>();
+            
+            var versionFolders = Directory.GetDirectories(getAppFolderPath(appname))
+                .OrderByDescending(f => new FileInfo(f).Name).ToArray();
+
+            bool bGetOneVersion = false;
+
+            foreach (var versionFolder in versionFolders)
+            {
+                
+                appVersionList.Add(Path.GetFileName(versionFolder));
+            }
+
+            return appVersionList;
+        }
+    }
 }
