@@ -34,6 +34,7 @@ public:
                     } else {
                         throw std::runtime_error("Manifest Json Error!");
                     }
+                    m_ManifestData.push_back(data);
                 }
             } else {
                 throw std::runtime_error("Manifest Json Error!");

@@ -7,29 +7,44 @@ public interface IDataManager
     public JObject GetCurrentData(string appname);
 
     public JObject GetData(string appname, string appversion);
-
 }
 
 public static class DataManagerUtil
 {
+    public static List<string> getAllVersion(string appFolderPath, string appname)
+    {
+        var versionconfigJsonFilePath = Path.Combine(appFolderPath, "versionconfig.json");
+        List<string>? versions = new List<string>();
+        if (File.Exists(versionconfigJsonFilePath))
+        {
+            string currentFileContent = File.ReadAllText(versionconfigJsonFilePath);
+            var obj = JObject.Parse(currentFileContent);
+            if (obj.ContainsKey("versions"))
+            {
+                versions = ((JArray) obj["versions"]!).ToObject<List<string>>();
+            }
+        }
+        return versions;
+    }
+
     public static JObject getCurrentData(string appFolderPath, string appname, string filename)
     {
         string currentVersionFolderName = "";
         string appVersionFilePath = "";
-        
-        var currentJsonConfigFilePath = Path.Combine(appFolderPath, "current.json");
-        if (File.Exists(currentJsonConfigFilePath))
+
+        var versionconfigJsonFilePath = Path.Combine(appFolderPath, "versionconfig.json");
+        if (File.Exists(versionconfigJsonFilePath))
         {
-            string currentFileContent = File.ReadAllText(currentJsonConfigFilePath);
+            string currentFileContent = File.ReadAllText(versionconfigJsonFilePath);
             var obj = JObject.Parse(currentFileContent);
-            if (obj.ContainsKey("version"))
+            if (obj.ContainsKey("current_version"))
             {
-                currentVersionFolderName = obj["version"].ToString();
+                currentVersionFolderName = obj["current_version"].ToString();
             }
         }
 
         var currentVersionFolderPath = Path.Combine(appFolderPath, currentVersionFolderName);
-        
+
         if (!Directory.Exists(currentVersionFolderPath))
         {
             var versionFolders = Directory.GetDirectories(appFolderPath)
@@ -63,7 +78,7 @@ public static class DataManagerUtil
         string fileContent = File.ReadAllText(appVersionFilePath);
         return JObject.Parse(fileContent);
     }
-    
+
     public static JObject getData(string appFolderPath, string appname, string appversion, string filename)
     {
         string currentVersionFolderPath = "";

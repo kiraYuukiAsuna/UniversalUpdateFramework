@@ -25,6 +25,11 @@ public:
         return apiRequest(url);
     }
 
+    std::pair<ReturnWrapper, std::string> GetAppVersionList() {
+        std::string url = std::format("/api/v1/GetAppVersionList?appname={}", m_AppName);
+        return apiRequest(url);
+    }
+
     std::pair<ReturnWrapper, std::string> GetCurrentAppManifest() {
         std::string url = std::format("/api/v1/GetCurrentAppManifest?appname={}", m_AppName);
         return apiRequest(url);
@@ -50,16 +55,17 @@ public:
         size_t bytes_received = 0;
         size_t bytes_total = 0;
 
-        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath, std::ref(bytes_received), std::ref(bytes_total));
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total));
 
         std::chrono::milliseconds timeout(100);
-        while(future.wait_for(timeout) !=  std::future_status::ready) {
+        while (future.wait_for(timeout) != std::future_status::ready) {
             checkProgress(bytes_received, bytes_total);
         }
 
         auto res = future.get();
         checkProgress(bytes_received, bytes_total);
-        std::cout<<std::endl;
+        std::cout << std::endl;
         return res;
     }
 
@@ -68,36 +74,38 @@ public:
         size_t bytes_received = 0;
         size_t bytes_total = 0;
 
-        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath, std::ref(bytes_received), std::ref(bytes_total));
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total));
 
         std::chrono::milliseconds timeout(100);
-        while(future.wait_for(timeout) !=  std::future_status::ready) {
+        while (future.wait_for(timeout) != std::future_status::ready) {
             checkProgress(bytes_received, bytes_total);
         }
 
         auto res = future.get();
         checkProgress(bytes_received, bytes_total);
-        std::cout<<std::endl;
+        std::cout << std::endl;
         return res;
     }
 
     std::pair<ReturnWrapper, std::string>
     DownloadFileFromFullPackage(std::string version, std::string md5, std::string localSaveFilePath) {
-        std::string url = std::format("/api/v1/DownloadFileFromFullPackage?appname={}&appversion={}", m_AppName,
-                                      version);
+        std::string url = std::format("/api/v1/DownloadFileFromFullPackage?appname={}&appversion={}&md5={}", m_AppName,
+                                      version, md5);
         size_t bytes_received = 0;
         size_t bytes_total = 0;
 
-        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath, std::ref(bytes_received), std::ref(bytes_total));
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total));
 
         std::chrono::milliseconds timeout(100);
-        while(future.wait_for(timeout) !=  std::future_status::ready) {
+        while (future.wait_for(timeout) != std::future_status::ready) {
             checkProgress(bytes_received, bytes_total);
         }
 
         auto res = future.get();
         checkProgress(bytes_received, bytes_total);
-        std::cout<<std::endl;
+        std::cout << std::endl;
         return res;
     }
 
@@ -116,16 +124,17 @@ public:
         size_t bytes_received = 0;
         size_t bytes_total = 0;
 
-        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath, std::ref(bytes_received), std::ref(bytes_total));
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total));
 
         std::chrono::milliseconds timeout(100);
-        while(future.wait_for(timeout) !=  std::future_status::ready) {
+        while (future.wait_for(timeout) != std::future_status::ready) {
             checkProgress(bytes_received, bytes_total);
         }
 
         auto res = future.get();
         checkProgress(bytes_received, bytes_total);
-        std::cout<<std::endl;
+        std::cout << std::endl;
         return res;
     }
 
@@ -135,16 +144,17 @@ public:
         size_t bytes_received = 0;
         size_t bytes_total = 0;
 
-        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath, std::ref(bytes_received), std::ref(bytes_total));
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total));
 
         std::chrono::milliseconds timeout(100);
-        while(future.wait_for(timeout) !=  std::future_status::ready) {
+        while (future.wait_for(timeout) != std::future_status::ready) {
             checkProgress(bytes_received, bytes_total);
         }
 
         auto res = future.get();
         checkProgress(bytes_received, bytes_total);
-        std::cout<<std::endl;
+        std::cout << std::endl;
         return res;
     }
 
@@ -163,11 +173,14 @@ private:
 
         } else {
             std::cout << "Request failed with status code: " << (result ? result->status : -1) << std::endl;
-            return {{false, (result ? result->status : -1), "Http Request Error!"}, ""};
+            return {{false, ErrorCode::HttpRequestError,
+                     "Http Request Error!" + std::string(magic_enum::enum_name(result.error()))}, ""};
         }
     }
 
-    std::pair<ReturnWrapper, std::string> apiRequestDownload(std::string requestUrl, std::string localSaveFilePath, size_t& bytes_received, size_t& bytes_total) {
+    std::pair<ReturnWrapper, std::string>
+    apiRequestDownload(std::string requestUrl, std::string localSaveFilePath, size_t &bytes_received,
+                       size_t &bytes_total) {
 //        const char* server_address = "http://192.168.0.114:5275";
 //        const char* endpoint = "/api/v1/DownloadFullPackage?appname=GameApp1&appversion=1.0.0";
 
@@ -222,7 +235,8 @@ private:
             return {{true}, localSaveFilePath};
         } else {
             std::cerr << "Failed To Download File: " << (res ? res->status : -1) << std::endl;
-            return {{false, (res ? res->status : -1), "Http Response Error!"}, ""};
+            return {{false, ErrorCode::HttpResponseError,
+                     "Http Response Error!" + std::string(magic_enum::enum_name(res.error()))}, ""};
         }
     }
 
@@ -242,7 +256,7 @@ private:
         const int bar_width = 50; // 进度条宽度
 
         // 计算进度百分比
-        double progress = static_cast<double>(received) / total;
+        double progress = static_cast<double>(received) / (total ? (double) total : 1.0);
 
         // 计算已完成的进度条宽度
         int completed_width = static_cast<int>(bar_width * progress);

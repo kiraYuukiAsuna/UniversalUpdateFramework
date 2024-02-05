@@ -38,8 +38,10 @@ public class AppVersionDataManager : IDataManager
     {
         lock (m_Mutex)
         {
-            var appVersionList = new List<string>();
-            
+            return DataManagerUtil.getAllVersion(getAppFolderPath(appname), appname);
+
+            /*var appVersionList = new List<string>();
+
             var versionFolders = Directory.GetDirectories(getAppFolderPath(appname))
                 .OrderByDescending(f => new FileInfo(f).Name).ToArray();
 
@@ -47,11 +49,11 @@ public class AppVersionDataManager : IDataManager
 
             foreach (var versionFolder in versionFolders)
             {
-                
+
                 appVersionList.Add(Path.GetFileName(versionFolder));
             }
 
-            return appVersionList;
+            return appVersionList;*/
         }
     }
 }

@@ -10,6 +10,7 @@ include_directories(
         ../../ThirdParty/cxxopts
         ../../Common/md5
         ../../Common/util
+        ../../Common/magic_enum
 )
 
 set(ProjectHeader
@@ -24,6 +25,10 @@ set(ProjectHeader
         UpdateCore/Version.h
         UpdateLogic/DifferencePackageUpdate.h
         UpdateLogic/FullpackageUpdate.h
+        TypeDefinition.h
+        ErrorCode.hpp
+        UpdateLogic/verifyAndRePatch.h
+        UpdateLogic/MultiVersionDifferencePackageUpdate.h
 
 )
 
@@ -39,6 +44,8 @@ set(ProjectSource
         UpdateCore/Version.cpp
         UpdateLogic/DifferencePackageUpdate.cpp
         UpdateLogic/FullpackageUpdate.cpp
+        UpdateLogic/verifyAndRePatch.cpp
+        UpdateLogic/MultiVersionDifferencePackageUpdate.cpp
 
 )
 

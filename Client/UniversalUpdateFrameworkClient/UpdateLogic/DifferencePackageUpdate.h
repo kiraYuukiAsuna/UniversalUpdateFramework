@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <utility>
 #include "Network/ApiRequest.h"
 #include "json.hpp"
 #include "util.hpp"
@@ -9,78 +10,155 @@
 #include "UpdateCore/AppManifest.h"
 #include "UpdateCore/FullPackageManifest.h"
 #include "UpdateCore/DifferencePackageManifest.h"
+#include "UpdateLogic/verifyAndRePatch.h"
 
 class DifferencePackageUpdate {
 public:
-    DifferencePackageUpdate(std::string host, std::string appName, std::string appPath)
-            : m_Host(host), m_AppName(appName), m_AppPath(appPath), m_ApiRequest(host, appName) {
+    DifferencePackageUpdate(const std::string &host, const std::string &appName, std::string appPath,
+                            std::string downloadPath, std::string oldVersion, std::string newVersion)
+            : m_Host(host), m_AppName(appName), m_AppPath(std::move(appPath)), m_ApiRequest(host, appName),
+              m_DownloadPath(std::move(downloadPath)), m_OldVersion(std::move(oldVersion)),
+              m_NewVersion(std::move(newVersion)) {
 
     }
 
-    ReturnWrapper execute(){
-        auto [result1, appVersionContent] = m_ApiRequest.GetCurrentAppVersion();
-        if(!result1.getStatus()){
+    ReturnWrapper execute() {
+        auto [result1, appVersionContent] = m_ApiRequest.GetAppVersion(m_NewVersion);
+        if (!result1.getStatus()) {
             return result1;
         }
-
         auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
 
-
-        auto [result2, appManifestContent] = m_ApiRequest.GetCurrentAppManifest();
-        if(!result2.getStatus()){
+        auto [result2, appManifestContent] = m_ApiRequest.GetAppManifest(m_NewVersion);
+        if (!result2.getStatus()) {
             return result2;
         }
         auto appManifest = AppManifest(nlohmann::json::parse(appManifestContent));
 
-
-        auto [result3, appFullPackageManifestContent] = m_ApiRequest.GetCurrentAppFullPackageManifest();
-        if(!result3.getStatus()){
+        auto [result3, appDifferencePackageManifestContent] = m_ApiRequest.GetAppDifferencePackageManifest(
+                m_NewVersion);
+        if (!result3.getStatus()) {
             return result3;
         }
-        auto appFullPackageManifest = FullPackageManifest(nlohmann::json::parse(appFullPackageManifestContent));
+        auto appDifferencePackageManifest = DifferencePackageManifest(
+                nlohmann::json::parse(appDifferencePackageManifestContent));
 
-        auto [result4, appDifferencePackageManifestContent] = m_ApiRequest.GetAppDifferencePackageManifest("1.1.0");
-        if(!result4.getStatus()){
-            return result4;
-        }
-        auto appDifferencePackageManifest = DifferencePackageManifest(nlohmann::json::parse(appDifferencePackageManifestContent));
-
-
-        std::filesystem::path downloadRootPath = "Download/" + m_AppPath + "/" + m_AppName;
-        if(std::filesystem::exists(downloadRootPath)){
+        std::filesystem::path downloadRootPath = m_DownloadPath + "/" + m_AppPath + "/" + m_AppName;
+        if (std::filesystem::exists(downloadRootPath)) {
             std::filesystem::remove_all(downloadRootPath);
         }
         std::filesystem::create_directories(downloadRootPath);
 
-        std::filesystem::path appVersionPath = downloadRootPath / ("appversion_" + appVersion.getVersion().getVersionString() + ".json");
-        std::filesystem::path appManifestPath = downloadRootPath / ("appmanifest_" + appManifest.getAppVersion().getVersion().getVersionString()+ ".json");
-        std::filesystem::path appFullPackageManifestPath = downloadRootPath / ("appfullpackagemanifest_" + appFullPackageManifest.getAppVersion().getVersion().getVersionString()+ ".json");
-        std::filesystem::path appDifferencePackageManifestPath = downloadRootPath / ("appdifferencepackagemanifest_" + appDifferencePackageManifest.getNewAppVersion().getVersion().getVersionString()+ ".json");
+        std::filesystem::path appVersionPath =
+                downloadRootPath / ("appversion_" + appVersion.getVersion().getVersionString() + ".json");
+        std::filesystem::path appManifestPath =
+                downloadRootPath / ("appmanifest_" + appManifest.getAppVersion().getVersion().getVersionString() +
+                                    ".json");
+        std::filesystem::path appDifferencePackageManifestPath =
+                downloadRootPath /
+                ("appdifferencepackagemanifest_" + appDifferencePackageManifest.getOldVersion().getVersionString() +
+                 "_to_" + appDifferencePackageManifest.getNewAppVersion().getVersion().getVersionString() + ".json");
 
         util::saveToFile(appVersionContent, appVersionPath);
         util::saveToFile(appManifestContent, appManifestPath);
-        util::saveToFile(appFullPackageManifestContent, appFullPackageManifestPath);
         util::saveToFile(appDifferencePackageManifestContent, appDifferencePackageManifestPath);
 
+        std::filesystem::path differencePackageFile = downloadRootPath / ("differencepackage_" +
+                                                                          appDifferencePackageManifest.getOldVersion().getVersionString() +
+                                                                          "_to_" +
+                                                                          appDifferencePackageManifest.getNewAppVersion().getVersion().getVersionString());
+        m_ApiRequest.DownloadDifferencePackage(m_NewVersion, differencePackageFile.string());
 
-        std::filesystem::path fullPackageFile = downloadRootPath / ("fullpackage_" + appVersion.getVersion().getVersionString());
-        m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string());
-
-        std::string shellCommand1 = std::format(R"(hpatchz.exe "" {} {})", fullPackageFile.string(), (downloadRootPath / ("fullpackage_" + appVersion.getVersion().getVersionString() + "_uncompressed")).string());
-        std::cout<<shellCommand1<<"\n";
-
-        system(shellCommand1.c_str());
-
-        std::filesystem::path differencePackageFile = downloadRootPath / ("differencepackage" + appVersion.getVersion().getVersionString());
-        m_ApiRequest.DownloadCurrentDifferencePackage(differencePackageFile.string());
-
-        std::string shellCommand2 = std::format(R"(hpatchz.exe "" {} {})", differencePackageFile.string(), (downloadRootPath / ("differencepackage_" + appVersion.getVersion().getVersionString() + "_uncompressed")).string());
-        std::cout<<shellCommand2<<"\n";
-
+        std::string shellCommand2 = std::format(R"(hpatchz.exe "" {} {})", differencePackageFile.string(),
+                                                (downloadRootPath /
+                                                 ("differencepackage_" + appVersion.getVersion().getVersionString() +
+                                                  "_uncompressed")).string());
+        std::cout << shellCommand2 << "\n";
         system(shellCommand2.c_str());
 
-        return {true};
+        auto uncompresssedPath = downloadRootPath / "differencepackage_uncompressed";
+        std::string shellCommand = std::format(R"(hpatchz.exe "" {} {})", differencePackageFile.string(),
+                                               uncompresssedPath.string());
+        std::cout << shellCommand << "\n";
+        system(shellCommand.c_str());
 
+
+        for (auto &file: appDifferencePackageManifest.getDiffDeletedFiles()) {
+            auto localFilePath = m_AppPath + "/" + file;
+            std::error_code ec;
+            std::filesystem::remove(localFilePath, ec);
+            if (ec) {
+                return {false, ErrorCode::DeleteFileFailed,
+                        std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))};
+            }
+            std::cout << "Delete File:" << file << "\n";
+        }
+
+        for (auto &file: appDifferencePackageManifest.getDiffUpdateFiles()) {
+            std::filesystem::path localFilePath = m_AppPath + "/" + file;
+            auto diffFilePath = uncompresssedPath / file;
+            std::filesystem::path tempUpdatePath = downloadRootPath / "DifferenceUpdate" / file;
+
+            std::error_code ec;
+            std::filesystem::create_directories(tempUpdatePath.parent_path(), ec);
+            if (ec) {
+                return {false, ErrorCode::CreateAppDirFailed,
+                        std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))};
+            }
+
+            std::string patchShellCommand = std::format(R"(hpatchz.exe {} {} {})", localFilePath.string(),
+                                                        diffFilePath.string(), tempUpdatePath.string());
+            std::cout << patchShellCommand << "\n";
+            system(patchShellCommand.c_str());
+
+            std::filesystem::remove(localFilePath, ec);
+            if (ec) {
+                return {false, ErrorCode::CreateAppDirFailed,
+                        std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))};
+            }
+            std::filesystem::copy_file(tempUpdatePath, localFilePath, ec);
+            if (ec) {
+                return {false, ErrorCode::CopyFileFailed,
+                        std::string(magic_enum::enum_name(ErrorCode::CopyFileFailed))};
+            }
+            std::cout << "Update File:" << file << "\n";
+        }
+
+        for (auto &file: appDifferencePackageManifest.getDiffNewFiles()) {
+            std::filesystem::path localFilePath = m_AppPath + "/" + file;
+            auto diffFilePath = uncompresssedPath / file;
+
+            std::error_code ec;
+            std::filesystem::create_directories(localFilePath.parent_path(), ec);
+            if (ec) {
+                return {false, ErrorCode::CreateAppDirFailed,
+                        std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))};
+            }
+            std::filesystem::copy_file(diffFilePath, localFilePath, ec);
+            if (ec) {
+                return {false, ErrorCode::CopyFileFailed,
+                        std::string(magic_enum::enum_name(ErrorCode::CopyFileFailed))};
+            }
+            std::cout << "Add New File:" << file << "\n";
+        }
+
+        auto result = VerifyAndRePatch::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
+        if (!result.getStatus()) {
+            return result;
+        }
+
+        std::error_code ec;
+        std::filesystem::remove_all(m_DownloadPath, ec);
+        if (ec) {
+            return {false, ErrorCode::DeleteDownloadDirFailed,
+                    std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))};
+        }
+
+        return {true};
+    }
+
+    ApiRequest& getApi(){
+        return m_ApiRequest;
     }
 
 private:
@@ -88,6 +166,9 @@ private:
     std::string m_Host;
     std::string m_AppName;
     std::string m_AppPath;
+    std::string m_DownloadPath;
+    std::string m_OldVersion;
+    std::string m_NewVersion;
 
 };
 

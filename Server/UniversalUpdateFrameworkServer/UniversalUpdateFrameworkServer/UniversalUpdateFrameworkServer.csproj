@@ -13,8 +13,19 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="appdata\EditorDemo\1.1.1\" />
-      <Folder Include="appdata\EditorDemo\1.12.0\" />
+      <Compile Remove="appdata\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="appdata\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Remove="appdata\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="appdata\**" />
     </ItemGroup>
 
 </Project>

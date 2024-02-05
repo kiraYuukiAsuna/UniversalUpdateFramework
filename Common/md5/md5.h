@@ -2,6 +2,7 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
 
 /* Type define */
 typedef unsigned int uint32;
@@ -46,3 +47,14 @@ private:
     static const char HEX[16];
     enum { BUFFER_SIZE = 1024 };
 };
+
+inline std::string calcFileMd5(const std::string& filePath){
+    MD5 md5;
+    ifstream in(filePath, std::ios::binary);
+    if (!in) {
+        std::cout << "Error on open " << filePath << " to calc md5\n";
+        throw std::runtime_error("Open file error!");
+    }
+    md5.update(in);
+    return md5.toString();
+}

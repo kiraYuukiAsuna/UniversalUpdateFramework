@@ -77,4 +77,6 @@ public class AppVersionController : ControllerBase
             return new JsonResult(ex.ToString());
         }
     }
+    
+    
 }

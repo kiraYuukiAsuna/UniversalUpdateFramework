@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <utility>
+#include "ErrorCode.hpp"
 
 enum class UpdateMode {
     eFullPackageUpdate,
@@ -10,21 +12,19 @@ enum class UpdateMode {
 class ReturnWrapper {
 public:
     ReturnWrapper(bool status)
-            : m_Status(status) {
-
+        : m_Status(status) {
     }
 
-    ReturnWrapper(bool status, int32_t errorNumber, std::string errorMessage)
-            : m_Status(status), m_ErrorNumber(errorNumber), m_ErrorMessage(errorMessage) {
-
+    ReturnWrapper(bool status, ErrorCode errorCode, std::string errorMessage)
+        : m_Status(status), m_ErrorCode(errorCode), m_ErrorMessage(std::move(errorMessage)) {
     }
 
     [[nodiscard]] bool getStatus() const {
         return m_Status;
     }
 
-    [[nodiscard]] int32_t getErrorNumber() const {
-        return m_ErrorNumber;
+    [[nodiscard]] ErrorCode getErrorNumber() const {
+        return m_ErrorCode;
     }
 
     [[nodiscard]] std::string getErrorMessage() const {
@@ -33,6 +33,6 @@ public:
 
 private:
     bool m_Status{false};
-    int32_t m_ErrorNumber{-1};
+    ErrorCode m_ErrorCode{ErrorCode::NoError};
     std::string m_ErrorMessage{"DefaultErrorMessage"};
 };
