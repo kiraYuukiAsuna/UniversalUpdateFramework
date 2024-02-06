@@ -1,56 +1,104 @@
 #include <iostream>
-#include "UpdateLogic/FullpackageUpdate.h"
-#include "UpdateLogic/DifferencePackageUpdate.h"
-#include "UpdateLogic/MultiVersionDifferencePackageUpdate.h"
 
-int main() {
-    MultiVersionDifferencePackageUpdate update3("127.0.0.1:5275", "Aurora", "Aurora", "Download", "1.0.0", "1.2.0");
-    auto res3 = update3.execute();
-    std::cout << res3.getErrorMessage() << "\n";
+#include "UpdateLogic/FullPackageUpdate.hpp"
+#include "UpdateLogic/DifferencePackageUpdate.hpp"
+#include "UpdateLogic/MultiVersionDifferencePackageUpdate.hpp"
+#include "UpdateLogic/DifferenceUpdate.hpp"
+#include "cxxopts.hpp"
+#include "UpdateCore/UpdateConfig.h"
 
-//    try {
-//        FullPackageUpdate update1("127.0.0.1:5275", "Aurora", "Aurora","Download","1.0.0");
-//        auto res1 = update1.execute();
-//        std::cout<<res1.getErrorMessage()<<"\n";
-//
-//        DifferencePackageUpdate update2("127.0.0.1:5275", "Aurora", "Aurora","Download","1.0.0","1.1.0");
-//        auto res2 = update2.execute();
-//        std::cout<<res2.getErrorMessage()<<"\n";
-//    }catch (std::exception& e){
-//        std::cerr<<e.what()<<"\n";
-//    }
+int main(int argc, char *argv[]) {
+    try {
+        cxxopts::Options options("UniversalUpdateFramework Client",
+                                 "A tool that help you update your app.");
 
-    return 0;
-}
+        options.add_options()
+                ("m,mode",
+                 "Update Mode. (-m FullPackageUpdate/DifferencePackageUpdate/MultiVersionDifferencePackageUpdate/DifferenceUpdate)",
+                 cxxopts::value<std::string>())
+                ("c,config", "Config file path.", cxxopts::value<std::string>())
+                ("h,help", "Print usage.");
+        auto result = options.parse(argc, argv);
 
+        if (result.count("help")) {
+            std::cout << options.help() << std::endl;
+            return 0;
+        }
 
-void test() {
-//    ApiRequest api("http://192.168.0.114:5275", "GameApp1");
+        if (result.count("mode")) {
+            std::string modeString = result["mode"].as<std::string>();
+            UpdateMode mode;
+            mode = magic_enum::enum_cast<UpdateMode>(modeString).value_or(UpdateMode::Unknown);
 
-//    auto [returnWrapper1,content1] = api.DownloadCurrentFullPackage("appfullpackage_110");
-//
-//    auto [returnWrapper2,content2] = api.DownloadFullPackage("1.0.0","appfullpackage_100");
-//
-//    auto [returnWrapper3,content3] = api.DownloadCurrentDifferencePackage("appdiffpackage_110");
-//
-//    auto [returnWrapper4,content4] = api.DownloadDifferencePackage("1.1.0","appdiffpackage_110_2");
-//
-//    MD5 md5;
-//    std::ifstream infile;
+            if (result.count("config")) {
+                std::string configFilePath = result["config"].as<std::string>();
+                UpdateConfig config(configFilePath);
+                config.writeToFile();
 
-//    infile.open("appfullpackage_110",std::ios::binary);
-//    md5.update(infile);
-//    std::cout<<md5.toString()<<"\n";
+                std::string updateToNewVersion = "x.x.x";
 
-//    infile.open("appfullpackage_100",std::ios::binary);
-//    md5.update(infile);
-//    std::cout<<md5.toString()<<"\n";
+                switch (mode) {
+                    case UpdateMode::Unknown: {
+                        std::cout << "Unknown update mode!\n";
+                        break;
+                    }
+                    case UpdateMode::FullPackageUpdate: {
+                        FullPackageUpdate update(config.getConfig().host,
+                                                 config.getConfig().appName,
+                                                 config.getConfig().appPath,
+                                                 config.getConfig().downloadPath,
+                                                 updateToNewVersion);
+                        auto res = update.execute();
+                        std::cout << res.getErrorMessage() << "\n";
 
-//    infile.open("appdiffpackage_110",std::ios::binary);
-//    md5.update(infile);
-//    std::cout<<md5.toString()<<"\n";
+                        break;
+                    }
+                    case UpdateMode::DifferencePackageUpdate: {
+                        DifferencePackageUpdate update(config.getConfig().host,
+                                                       config.getConfig().appName,
+                                                       config.getConfig().appPath,
+                                                       config.getConfig().downloadPath,
+                                                       config.getConfig().localCurrentVersion,
+                                                       updateToNewVersion);
+                        auto res = update.execute();
+                        std::cout << res.getErrorMessage() << "\n";
 
-//    infile.open("appdiffpackage_110_2",std::ios::binary);
-//    md5.update(infile);
-//    std::cout<<md5.toString()<<"\n";
+                        break;
+                    }
+                    case UpdateMode::MultiVersionDifferencePackageUpdate: {
+                        MultiVersionDifferencePackageUpdate update(config.getConfig().host,
+                                                                   config.getConfig().appName,
+                                                                   config.getConfig().appPath,
+                                                                   config.getConfig().downloadPath,
+                                                                   config.getConfig().localCurrentVersion,
+                                                                   updateToNewVersion);
+                        auto res = update.execute();
+                        std::cout << res.getErrorMessage() << "\n";
+
+                        break;
+                    }
+                    case UpdateMode::DifferenceUpdate: {
+                        DifferenceUpdate update(config.getConfig().host,
+                                                config.getConfig().appName,
+                                                config.getConfig().appPath,
+                                                config.getConfig().downloadPath,
+                                                updateToNewVersion);
+                        auto res = update.execute();
+                        std::cout << res.getErrorMessage() << "\n";
+
+                        break;
+                    }
+                }
+            } else {
+                std::cout << "No config file!\n";
+            }
+
+        } else {
+            std::cout << "No update mode!\n";
+        }
+
+        return 0;
+    } catch (std::exception &e) {
+        std::cerr << "Exception:" << e.what() << "\n";
+    }
 }

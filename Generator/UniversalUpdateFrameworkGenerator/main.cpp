@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <format>
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "cxxopts.hpp"
 #include "md5.h"
 
@@ -231,8 +231,8 @@ bool generateDifferencePackageManifestFile(std::filesystem::path appversionFolde
     return true;
 }
 
-//.\UniversalUpdateFrameworkGenerator.exe -m DifferencePackage -o D:\WorkSpace\UnrealEngine\1.1.0 -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0 -b 1.1.0
-//.\UniversalUpdateFrameworkGenerator.exe -m FullPackage -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0
+// .\UniversalUpdateFrameworkGenerator.exe -m DifferencePackage -o D:\WorkSpace\UnrealEngine\1.1.0 -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0 -b 1.1.0
+// .\UniversalUpdateFrameworkGenerator.exe -m FullPackage -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0
 
 int main(int argc, char *argv[]) {
     try {

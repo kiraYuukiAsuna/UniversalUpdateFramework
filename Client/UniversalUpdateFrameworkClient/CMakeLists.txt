@@ -8,9 +8,9 @@ include_directories(
         ../../ThirdParty/nlohmann_json
         ../../ThirdParty/httplib
         ../../ThirdParty/cxxopts
+        ../../ThirdParty/magic_enum
         ../../Common/md5
         ../../Common/util
-        ../../Common/magic_enum
 )
 
 set(ProjectHeader
@@ -18,34 +18,27 @@ set(ProjectHeader
         ../../Common/util/util.hpp
 
         Network/ApiRequest.h
+
         UpdateCore/AppManifest.h
         UpdateCore/AppVersion.h
         UpdateCore/DifferencePackageManifest.h
         UpdateCore/FullPackageManifest.h
-        UpdateCore/Version.h
-        UpdateLogic/DifferencePackageUpdate.h
-        UpdateLogic/FullpackageUpdate.h
+
+        UpdateLogic/FullPackageUpdate.hpp
+        UpdateLogic/DifferencePackageUpdate.hpp
+        UpdateLogic/VerifyAndRePatch.hpp
+        UpdateLogic/MultiVersionDifferencePackageUpdate.hpp
+
         TypeDefinition.h
         ErrorCode.hpp
-        UpdateLogic/verifyAndRePatch.h
-        UpdateLogic/MultiVersionDifferencePackageUpdate.h
-
 )
 
 set(ProjectSource
         main.cpp
+
         ../../Common/md5/md5.cpp
 
         Network/ApiRequest.cpp
-        UpdateCore/AppManifest.cpp
-        UpdateCore/AppVersion.cpp
-        UpdateCore/DifferencePackageManifest.cpp
-        UpdateCore/FullPackageManifest.cpp
-        UpdateCore/Version.cpp
-        UpdateLogic/DifferencePackageUpdate.cpp
-        UpdateLogic/FullpackageUpdate.cpp
-        UpdateLogic/verifyAndRePatch.cpp
-        UpdateLogic/MultiVersionDifferencePackageUpdate.cpp
 
 )
 

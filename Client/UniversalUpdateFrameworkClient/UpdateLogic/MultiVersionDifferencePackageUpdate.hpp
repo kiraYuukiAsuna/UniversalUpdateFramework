@@ -1,6 +1,10 @@
 #pragma once
 
-#include "UpdateLogic/DifferencePackageUpdate.h"
+#include "TypeDefinition.h"
+#include "Network/ApiRequest.h"
+#include "UpdateCore/AppVersion.h"
+#include "UpdateCore/DifferencePackageManifest.h"
+#include "DifferencePackageUpdate.hpp"
 
 class MultiVersionDifferencePackageUpdate {
 public:

@@ -14,5 +14,6 @@ enum class ErrorCode : int32_t {
     DeleteFileFailed,
     DownloadFileFailed,
     AccessFileFailed,
-    CopyFileFailed
+    CopyFileFailed,
+    OpenConfigFileFailed
 };

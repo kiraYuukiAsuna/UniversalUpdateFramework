@@ -4,13 +4,11 @@
 #include <iostream>
 #include <utility>
 #include "Network/ApiRequest.h"
-#include "json.hpp"
 #include "util.hpp"
 #include "UpdateCore/AppVersion.h"
 #include "UpdateCore/AppManifest.h"
-#include "UpdateCore/FullPackageManifest.h"
 #include "UpdateCore/DifferencePackageManifest.h"
-#include "UpdateLogic/verifyAndRePatch.h"
+#include "VerifyAndRePatch.hpp"
 
 class DifferencePackageUpdate {
 public:
@@ -57,7 +55,8 @@ public:
         std::filesystem::path appDifferencePackageManifestPath =
                 downloadRootPath /
                 ("appdifferencepackagemanifest_" + appDifferencePackageManifest.getOldVersion().getVersionString() +
-                 "_to_" + appDifferencePackageManifest.getNewAppVersion().getVersion().getVersionString() + ".json");
+                 "_to_" + appDifferencePackageManifest.getNewAppVersion().getVersion().getVersionString() +
+                 ".json");
 
         util::saveToFile(appVersionContent, appVersionPath);
         util::saveToFile(appManifestContent, appManifestPath);
@@ -71,7 +70,8 @@ public:
 
         std::string shellCommand2 = std::format(R"(hpatchz.exe "" {} {})", differencePackageFile.string(),
                                                 (downloadRootPath /
-                                                 ("differencepackage_" + appVersion.getVersion().getVersionString() +
+                                                 ("differencepackage_" +
+                                                  appVersion.getVersion().getVersionString() +
                                                   "_uncompressed")).string());
         std::cout << shellCommand2 << "\n";
         system(shellCommand2.c_str());
@@ -84,6 +84,7 @@ public:
 
 
         for (auto &file: appDifferencePackageManifest.getDiffDeletedFiles()) {
+            std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
             std::error_code ec;
             std::filesystem::remove(localFilePath, ec);
@@ -91,10 +92,10 @@ public:
                 return {false, ErrorCode::DeleteFileFailed,
                         std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))};
             }
-            std::cout << "Delete File:" << file << "\n";
         }
 
         for (auto &file: appDifferencePackageManifest.getDiffUpdateFiles()) {
+            std::cout << "Update File:" << file << "\n";
             std::filesystem::path localFilePath = m_AppPath + "/" + file;
             auto diffFilePath = uncompresssedPath / file;
             std::filesystem::path tempUpdatePath = downloadRootPath / "DifferenceUpdate" / file;
@@ -113,18 +114,19 @@ public:
 
             std::filesystem::remove(localFilePath, ec);
             if (ec) {
-                return {false, ErrorCode::CreateAppDirFailed,
-                        std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))};
+                return {false, ErrorCode::DeleteFileFailed,
+                        std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))};
             }
             std::filesystem::copy_file(tempUpdatePath, localFilePath, ec);
             if (ec) {
-                return {false, ErrorCode::CopyFileFailed,
-                        std::string(magic_enum::enum_name(ErrorCode::CopyFileFailed))};
+//                return {false, ErrorCode::CopyFileFailed,
+//                        std::string(magic_enum::enum_name(ErrorCode::CopyFileFailed))};
+                std::cout << std::string(magic_enum::enum_name(ErrorCode::CopyFileFailed)) << "\n";
             }
-            std::cout << "Update File:" << file << "\n";
         }
 
         for (auto &file: appDifferencePackageManifest.getDiffNewFiles()) {
+            std::cout << "Add New File:" << file << "\n";
             std::filesystem::path localFilePath = m_AppPath + "/" + file;
             auto diffFilePath = uncompresssedPath / file;
 
@@ -134,12 +136,13 @@ public:
                 return {false, ErrorCode::CreateAppDirFailed,
                         std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))};
             }
-            std::filesystem::copy_file(diffFilePath, localFilePath, ec);
+            std::filesystem::copy_file(diffFilePath, localFilePath,
+                                       std::filesystem::copy_options::overwrite_existing,
+                                       ec);
             if (ec) {
                 return {false, ErrorCode::CopyFileFailed,
                         std::string(magic_enum::enum_name(ErrorCode::CopyFileFailed))};
             }
-            std::cout << "Add New File:" << file << "\n";
         }
 
         auto result = VerifyAndRePatch::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
@@ -157,7 +160,7 @@ public:
         return {true};
     }
 
-    ApiRequest& getApi(){
+    ApiRequest &getApi() {
         return m_ApiRequest;
     }
 
@@ -171,4 +174,3 @@ private:
     std::string m_NewVersion;
 
 };
-

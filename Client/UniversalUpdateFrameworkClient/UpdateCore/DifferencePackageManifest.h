@@ -2,7 +2,7 @@
 
 #include <string>
 #include <exception>
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 #include "AppVersion.h"
 
 class DifferencePackageManifest {

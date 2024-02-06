@@ -4,12 +4,11 @@
 #include <iostream>
 #include <utility>
 #include "Network/ApiRequest.h"
-#include "json.hpp"
 #include "util.hpp"
 #include "UpdateCore/AppVersion.h"
 #include "UpdateCore/AppManifest.h"
 #include "UpdateCore/FullPackageManifest.h"
-#include "UpdateLogic/verifyAndRePatch.h"
+#include "VerifyAndRePatch.hpp"
 
 class FullPackageUpdate {
 public:

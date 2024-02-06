@@ -5,8 +5,11 @@
 #include "ErrorCode.hpp"
 
 enum class UpdateMode {
-    eFullPackageUpdate,
-    eDifferencePackageUpdate
+    Unknown,
+    FullPackageUpdate,
+    DifferencePackageUpdate,
+    MultiVersionDifferencePackageUpdate,
+    DifferenceUpdate
 };
 
 class ReturnWrapper {
