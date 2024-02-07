@@ -187,13 +187,13 @@ private:
 // Create an HTTP client instance
         httplib::Client client(m_Host);
 
-        std::string filename = localSaveFilePath;
+        std::filesystem::path filePath = localSaveFilePath;
         std::ofstream file;
         bool file_opened = false;
 
 // Send a GET request to the server
         httplib::Headers headers;
-        bytes_received = getFileSize(filename);
+        bytes_received = getFileSize(filePath.string());
         headers.emplace("Range", "bytes=" + std::to_string(bytes_received) + "-");
 
         auto res = client.Get(requestUrl, headers, [&](const httplib::Response &res) {
@@ -212,9 +212,17 @@ private:
                 bytes_total = std::stoul(res.get_header_value("Content-Length")) + bytes_received;
 
                 // Open a file stream to save the downloaded file
-                file.open(filename, std::ios::binary | std::ios::app);
+                if (auto directory = filePath.parent_path(); !std::filesystem::exists(directory)) {
+                    std::error_code ec;
+                    std::filesystem::create_directories(directory, ec);
+                    if (ec) {
+                        return false;
+                    }
+                }
+
+                file.open(filePath.string(), std::ios::binary | std::ios::app);
                 if (!file.is_open()) {
-                    std::cerr << "Failed to open file for writing: " << filename << std::endl;
+                    std::cerr << "Failed to open file for writing: " << filePath.string() << std::endl;
                     return false;
                 }
 

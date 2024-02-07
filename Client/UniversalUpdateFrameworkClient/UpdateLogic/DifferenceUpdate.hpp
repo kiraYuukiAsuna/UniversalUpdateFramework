@@ -40,6 +40,14 @@ public:
             serverMd5Map.insert({fileManifest.filePath, fileManifest.md5});
         }
 
+        if (!std::filesystem::exists(m_AppPath)) {
+            std::error_code ec;
+            std::filesystem::create_directories(m_AppPath, ec);
+            if (ec) {
+                return {false, ErrorCode::CreateAppDirFailed, ec.message()};
+            }
+        }
+
         for (auto &directoryEntry: std::filesystem::recursive_directory_iterator(m_AppPath)) {
             if (!directoryEntry.is_directory()) {
                 auto relativePath = std::filesystem::relative(directoryEntry.path().string(),
@@ -106,13 +114,21 @@ public:
 
         for (auto &file: new_elements) {
             std::cout << "Download File:" << file << "\n";
-            std::string localFilePath = m_AppPath + "/" + file;
-            auto serverMd5 = serverMd5Map[localFilePath];
+            std::filesystem::path localFilePath = m_AppPath + "/" + file;
+
+            if (auto directory = localFilePath.parent_path(); !std::filesystem::exists(directory)) {
+                std::error_code ec;
+                std::filesystem::create_directories(directory, ec);
+                if (ec) {
+                    return {false, ErrorCode::CreateDirFailed, ec.message()};
+                }
+            }
+
+            auto serverMd5 = serverMd5Map[file];
             auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.getVersion().getVersionString(),
-                                                                        serverMd5, localFilePath);
+                                                                        serverMd5, localFilePath.string());
             if (!result.getStatus()) {
-                return {false, ErrorCode::DownloadFileFailed,
-                        std::string(magic_enum::enum_name(ErrorCode::DownloadFileFailed))};
+                return {false, ErrorCode::DownloadFileFailed, result.getErrorMessage()};
             }
         }
 

@@ -6,11 +6,11 @@
 #include "TypeDefinition.h"
 
 struct Config {
-    std::string host;
-    std::string appName;
-    std::string appPath;
-    std::string downloadPath;
-    std::string localCurrentVersion;
+    std::string host{"127.0.0.1"};
+    std::string appName{"DefaultAPPName"};
+    std::string appPath{"DefaultAppPath"};
+    std::string downloadPath{"Download"};
+    std::string localCurrentVersion{"x.x.x"};
 
     friend void to_json(nlohmann::json &j, const Config &value) {
         j["host"] = value.host;
@@ -21,13 +21,7 @@ struct Config {
     }
 
     friend void from_json(const nlohmann::json &j, Config &value) {
-        Config defaultObj{
-                .host = "127.0.0.1",
-                .appName = "DefaultAPPName",
-                .appPath = "DefaultAppPath",
-                .downloadPath = "Download",
-                .localCurrentVersion = "x.x.x"
-        };
+        Config defaultObj{};
         value.host = j.value("host", defaultObj.host);
         value.appName = j.value("appName", defaultObj.appName);
         value.appPath = j.value("appPath", defaultObj.appPath);

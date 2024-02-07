@@ -6,6 +6,7 @@
 #include "UpdateLogic/DifferenceUpdate.hpp"
 #include "cxxopts.hpp"
 #include "UpdateCore/UpdateConfig.h"
+#include "Network/ApiRequest.h"
 
 int main(int argc, char *argv[]) {
     try {
@@ -17,6 +18,7 @@ int main(int argc, char *argv[]) {
                  "Update Mode. (-m FullPackageUpdate/DifferencePackageUpdate/MultiVersionDifferencePackageUpdate/DifferenceUpdate)",
                  cxxopts::value<std::string>())
                 ("c,config", "Config file path.", cxxopts::value<std::string>())
+                ("v,newversion", "New version to update. If not given by default will update to the newest version.", cxxopts::value<std::string>())
                 ("h,help", "Print usage.");
         auto result = options.parse(argc, argv);
 
@@ -33,9 +35,27 @@ int main(int argc, char *argv[]) {
             if (result.count("config")) {
                 std::string configFilePath = result["config"].as<std::string>();
                 UpdateConfig config(configFilePath);
-                config.writeToFile();
+                config.readFromFile();
 
-                std::string updateToNewVersion = "x.x.x";
+                std::string updateToNewVersion;
+                if(result.count("newversion")){
+                    updateToNewVersion = result["newversion"].as<std::string>();
+                }
+                ApiRequest api(config.getConfig().host,config.getConfig().appName);
+                auto [result1, appVersionContent] = updateToNewVersion.empty() ? api.GetCurrentAppVersion()
+                                                                               : api.GetAppVersion(updateToNewVersion);
+                if (!result1.getStatus()) {
+                    std::cout<<"Cannot connect to serevr!\n";
+                    return -1;
+                }
+
+                try {
+                    auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
+                    updateToNewVersion = appVersion.getVersion().getVersionString();
+                }catch(std::exception& e){
+                    std::cout<<"Decode version info failed! Please check if the version given exist in the server!\n";
+                    return -1;
+                }
 
                 switch (mode) {
                     case UpdateMode::Unknown: {
@@ -51,9 +71,20 @@ int main(int argc, char *argv[]) {
                         auto res = update.execute();
                         std::cout << res.getErrorMessage() << "\n";
 
+                        if(res.getStatus()){
+                            auto cfg = config.getConfig();
+                            cfg.localCurrentVersion = updateToNewVersion;
+                            config.setConfig(cfg);
+                            config.writeToFile();
+                        }
+
                         break;
                     }
                     case UpdateMode::DifferencePackageUpdate: {
+                        if (config.getConfig().localCurrentVersion == "x.x.x") {
+                            std::cout<<"Invalid local current version!\n";
+                        }
+
                         DifferencePackageUpdate update(config.getConfig().host,
                                                        config.getConfig().appName,
                                                        config.getConfig().appPath,
@@ -63,9 +94,20 @@ int main(int argc, char *argv[]) {
                         auto res = update.execute();
                         std::cout << res.getErrorMessage() << "\n";
 
+                        if(res.getStatus()){
+                            auto cfg = config.getConfig();
+                            cfg.localCurrentVersion = updateToNewVersion;
+                            config.setConfig(cfg);
+                            config.writeToFile();
+                        }
+
                         break;
                     }
                     case UpdateMode::MultiVersionDifferencePackageUpdate: {
+                        if (config.getConfig().localCurrentVersion == "x.x.x") {
+                            std::cout<<"Invaid local current version!\n";
+                        }
+
                         MultiVersionDifferencePackageUpdate update(config.getConfig().host,
                                                                    config.getConfig().appName,
                                                                    config.getConfig().appPath,
@@ -74,6 +116,13 @@ int main(int argc, char *argv[]) {
                                                                    updateToNewVersion);
                         auto res = update.execute();
                         std::cout << res.getErrorMessage() << "\n";
+
+                        if(res.getStatus()){
+                            auto cfg = config.getConfig();
+                            cfg.localCurrentVersion = updateToNewVersion;
+                            config.setConfig(cfg);
+                            config.writeToFile();
+                        }
 
                         break;
                     }
@@ -85,6 +134,13 @@ int main(int argc, char *argv[]) {
                                                 updateToNewVersion);
                         auto res = update.execute();
                         std::cout << res.getErrorMessage() << "\n";
+
+                        if(res.getStatus()){
+                            auto cfg = config.getConfig();
+                            cfg.localCurrentVersion = updateToNewVersion;
+                            config.setConfig(cfg);
+                            config.writeToFile();
+                        }
 
                         break;
                     }
