@@ -1,14 +1,6 @@
-#include <iostream>
+#include "UpdateLogic/UpdateClientAppEntry.hpp"
 
-#include "UpdateLogic/FullPackageUpdate.hpp"
-#include "UpdateLogic/DifferencePackageUpdate.hpp"
-#include "UpdateLogic/MultiVersionDifferencePackageUpdate.hpp"
-#include "UpdateLogic/DifferenceUpdate.hpp"
-#include "cxxopts.hpp"
-#include "UpdateCore/UpdateConfig.h"
-#include "Network/ApiRequest.h"
-
-int main(int argc, char *argv[]) {
+inline int handleArgument(int argc, char *argv[]) {
     try {
         cxxopts::Options options("UniversalUpdateFramework Client",
                                  "A tool that help you update your app.");
@@ -18,7 +10,8 @@ int main(int argc, char *argv[]) {
                  "Update Mode. (-m FullPackageUpdate/DifferencePackageUpdate/MultiVersionDifferencePackageUpdate/DifferenceUpdate)",
                  cxxopts::value<std::string>())
                 ("c,config", "Config file path.", cxxopts::value<std::string>())
-                ("v,newversion", "New version to update. If not given by default will update to the newest version.", cxxopts::value<std::string>())
+                ("v,newversion", "New version to update. If not given by default will update to the newest version.",
+                 cxxopts::value<std::string>())
                 ("h,help", "Print usage.");
         auto result = options.parse(argc, argv);
 
@@ -34,117 +27,31 @@ int main(int argc, char *argv[]) {
 
             if (result.count("config")) {
                 std::string configFilePath = result["config"].as<std::string>();
-                UpdateConfig config(configFilePath);
+                UpdateConfigIo config(configFilePath);
                 config.readFromFile();
 
                 std::string updateToNewVersion;
-                if(result.count("newversion")){
+                if (result.count("newversion")) {
                     updateToNewVersion = result["newversion"].as<std::string>();
                 }
-                ApiRequest api(config.getConfig().host,config.getConfig().appName);
+                ApiRequest api(config.getConfig().host, config.getConfig().appName, config.getConfig().channel,
+                               config.getConfig().platform);
                 auto [result1, appVersionContent] = updateToNewVersion.empty() ? api.GetCurrentAppVersion()
                                                                                : api.GetAppVersion(updateToNewVersion);
                 if (!result1.getStatus()) {
-                    std::cout<<"Cannot connect to serevr!\n";
+                    std::cout << "Cannot connect to serevr!\n";
                     return -1;
                 }
 
                 try {
                     auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
                     updateToNewVersion = appVersion.getVersion().getVersionString();
-                }catch(std::exception& e){
-                    std::cout<<"Decode version info failed! Please check if the version given exist in the server!\n";
+                } catch (std::exception &e) {
+                    std::cout << "Decode version info failed! Please check if the version given exist in the server!\n";
                     return -1;
                 }
 
-                switch (mode) {
-                    case UpdateMode::Unknown: {
-                        std::cout << "Unknown update mode!\n";
-                        break;
-                    }
-                    case UpdateMode::FullPackageUpdate: {
-                        FullPackageUpdate update(config.getConfig().host,
-                                                 config.getConfig().appName,
-                                                 config.getConfig().appPath,
-                                                 config.getConfig().downloadPath,
-                                                 updateToNewVersion);
-                        auto res = update.execute();
-                        std::cout << res.getErrorMessage() << "\n";
-
-                        if(res.getStatus()){
-                            auto cfg = config.getConfig();
-                            cfg.localCurrentVersion = updateToNewVersion;
-                            config.setConfig(cfg);
-                            config.writeToFile();
-                        }
-
-                        break;
-                    }
-                    case UpdateMode::DifferencePackageUpdate: {
-                        if (config.getConfig().localCurrentVersion == "x.x.x") {
-                            std::cout<<"Invalid local current version!\n";
-                        }
-
-                        DifferencePackageUpdate update(config.getConfig().host,
-                                                       config.getConfig().appName,
-                                                       config.getConfig().appPath,
-                                                       config.getConfig().downloadPath,
-                                                       config.getConfig().localCurrentVersion,
-                                                       updateToNewVersion);
-                        auto res = update.execute();
-                        std::cout << res.getErrorMessage() << "\n";
-
-                        if(res.getStatus()){
-                            auto cfg = config.getConfig();
-                            cfg.localCurrentVersion = updateToNewVersion;
-                            config.setConfig(cfg);
-                            config.writeToFile();
-                        }
-
-                        break;
-                    }
-                    case UpdateMode::MultiVersionDifferencePackageUpdate: {
-                        if (config.getConfig().localCurrentVersion == "x.x.x") {
-                            std::cout<<"Invaid local current version!\n";
-                        }
-
-                        MultiVersionDifferencePackageUpdate update(config.getConfig().host,
-                                                                   config.getConfig().appName,
-                                                                   config.getConfig().appPath,
-                                                                   config.getConfig().downloadPath,
-                                                                   config.getConfig().localCurrentVersion,
-                                                                   updateToNewVersion);
-                        auto res = update.execute();
-                        std::cout << res.getErrorMessage() << "\n";
-
-                        if(res.getStatus()){
-                            auto cfg = config.getConfig();
-                            cfg.localCurrentVersion = updateToNewVersion;
-                            config.setConfig(cfg);
-                            config.writeToFile();
-                        }
-
-                        break;
-                    }
-                    case UpdateMode::DifferenceUpdate: {
-                        DifferenceUpdate update(config.getConfig().host,
-                                                config.getConfig().appName,
-                                                config.getConfig().appPath,
-                                                config.getConfig().downloadPath,
-                                                updateToNewVersion);
-                        auto res = update.execute();
-                        std::cout << res.getErrorMessage() << "\n";
-
-                        if(res.getStatus()){
-                            auto cfg = config.getConfig();
-                            cfg.localCurrentVersion = updateToNewVersion;
-                            config.setConfig(cfg);
-                            config.writeToFile();
-                        }
-
-                        break;
-                    }
-                }
+                handleUpdateMode(mode, config, updateToNewVersion);
             } else {
                 std::cout << "No config file!\n";
             }
@@ -157,4 +64,8 @@ int main(int argc, char *argv[]) {
     } catch (std::exception &e) {
         std::cerr << "Exception:" << e.what() << "\n";
     }
+}
+
+int main(int argc, char *argv[]) {
+    return handleArgument(argc, argv);
 }

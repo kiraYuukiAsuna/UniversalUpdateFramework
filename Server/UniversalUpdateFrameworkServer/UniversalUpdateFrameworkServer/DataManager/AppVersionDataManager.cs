@@ -18,27 +18,29 @@ public class AppVersionDataManager : IDataManager
         return Path.Combine(m_AppDataFolderPath, appname);
     }
 
-    public JObject GetCurrentData(string appname)
+    public JObject GetCurrentData(string appname, string channel, string platform)
     {
         lock (m_Mutex)
         {
-            return DataManagerUtil.getCurrentData(getAppFolderPath(appname), appname, "appversion.json");
+            return DataManagerUtil.getCurrentData(getAppFolderPath(appname), appname, channel, platform,
+                "appversion.json");
         }
     }
 
-    public JObject GetData(string appname, string appversion)
+    public JObject GetData(string appname, string appversion, string channel, string platform)
     {
         lock (m_Mutex)
         {
-            return DataManagerUtil.getData(getAppFolderPath(appname), appname, appversion, "appversion.json");
+            return DataManagerUtil.getData(getAppFolderPath(appname), appname, appversion, channel, platform,
+                "appversion.json");
         }
     }
 
-    public List<string> GetAppVersionList(string appname)
+    public List<string> GetAppVersionList(string appname, string channel, string platform)
     {
         lock (m_Mutex)
         {
-            return DataManagerUtil.getAllVersion(getAppFolderPath(appname), appname);
+            return DataManagerUtil.getAllVersion(getAppFolderPath(appname), appname, channel, platform);
 
             /*var appVersionList = new List<string>();
 

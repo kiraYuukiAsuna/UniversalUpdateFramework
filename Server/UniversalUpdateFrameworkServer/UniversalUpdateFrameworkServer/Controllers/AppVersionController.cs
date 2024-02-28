@@ -24,59 +24,58 @@ public class AppVersionController : ControllerBase
     }
 
     [HttpGet("GetCurrentAppVersion")]
-    public JsonResult GetCurrentAppVersion(string appname)
+    public JsonResult GetCurrentAppVersion(string appname, string channel, string platform)
     {
         try
         {
-            var jObject = m_AppVersionDataManager.GetCurrentData(appname);
+            var jObject = m_AppVersionDataManager.GetCurrentData(appname, channel, platform);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;
 
             return new JsonResult(rootElement);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new JsonResult(ex.ToString());
         }
     }
-    
+
     [HttpGet("GetAppVersion")]
-    public JsonResult GetAppVersion(string appname, string appversion)
+    public JsonResult GetAppVersion(string appname, string appversion, string channel, string platform)
     {
-        try{
-            var jObject = m_AppVersionDataManager.GetData(appname, appversion);
+        try
+        {
+            var jObject = m_AppVersionDataManager.GetData(appname, appversion, channel, platform);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;
 
             return new JsonResult(rootElement);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new JsonResult(ex.ToString());
         }
     }
-    
+
     [HttpGet("GetAppVersionList")]
-    public JsonResult GetAppVersionList(string appname)
+    public JsonResult GetAppVersionList(string appname, string channel, string platform)
     {
         try
         {
-            var appVersionList = m_AppVersionDataManager.GetAppVersionList(appname);
+            var appVersionList = m_AppVersionDataManager.GetAppVersionList(appname, channel, platform);
 
             string jObject = JsonConvert.SerializeObject(appVersionList);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;
-            
+
             return new JsonResult(rootElement);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new JsonResult(ex.ToString());
         }
     }
-    
-    
 }

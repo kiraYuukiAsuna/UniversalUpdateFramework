@@ -1,17 +1,19 @@
 #pragma once
 
-#include "Network/ApiRequest.h"
+#include "Network/ApiRequest.hpp"
 #include "nlohmann/json.hpp"
-#include "UpdateCore/AppVersion.h"
-#include "UpdateCore/AppManifest.h"
+#include "UpdateCore/AppVersion.hpp"
+#include "UpdateCore/AppManifest.hpp"
 #include "md5.h"
 #include "UpdateLogic/VerifyAndRePatch.hpp"
 
 class DifferenceUpdate {
 public:
-    DifferenceUpdate(const std::string &host, const std::string &appName, std::string appPath,
+    DifferenceUpdate(const std::string &host, const std::string &appName, std::string channel,
+                     std::string platform, std::string appPath,
                      std::string downloadPath, std::string newVersion)
-            : m_Host(host), m_AppName(appName), m_AppPath(std::move(appPath)), m_ApiRequest(host, appName),
+            : m_Host(host), m_AppName(appName), m_AppPath(std::move(appPath)),
+              m_ApiRequest(host, appName, channel, platform), m_Channel(channel), m_Platform(platform),
               m_DownloadPath(std::move(downloadPath)),
               m_NewVersion(std::move(newVersion)) {
 
@@ -153,6 +155,8 @@ private:
     ApiRequest m_ApiRequest;
     std::string m_Host;
     std::string m_AppName;
+    std::string m_Channel;
+    std::string m_Platform;
     std::string m_AppPath;
     std::string m_DownloadPath;
     std::string m_NewVersion;

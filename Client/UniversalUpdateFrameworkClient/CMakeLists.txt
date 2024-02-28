@@ -17,28 +17,26 @@ set(ProjectHeader
         ../../Common/md5/md5.h
         ../../Common/util/util.hpp
 
-        Network/ApiRequest.h
+        Network/ApiRequest.hpp
 
-        UpdateCore/AppManifest.h
-        UpdateCore/AppVersion.h
-        UpdateCore/DifferencePackageManifest.h
-        UpdateCore/FullPackageManifest.h
+        UpdateCore/AppManifest.hpp
+        UpdateCore/AppVersion.hpp
+        UpdateCore/DifferencePackageManifest.hpp
+        UpdateCore/FullPackageManifest.hpp
 
         UpdateLogic/FullPackageUpdate.hpp
         UpdateLogic/DifferencePackageUpdate.hpp
         UpdateLogic/VerifyAndRePatch.hpp
         UpdateLogic/MultiVersionDifferencePackageUpdate.hpp
 
-        TypeDefinition.h
-        ErrorCode.hpp
+        UpdateCore/TypeDefinition.hpp
+        UpdateCore/ErrorCode.hpp
 )
 
 set(ProjectSource
         main.cpp
 
         ../../Common/md5/md5.cpp
-
-        Network/ApiRequest.cpp
 
 )
 

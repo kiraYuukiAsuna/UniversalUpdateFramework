@@ -2,10 +2,10 @@
 
 #include <fstream>
 #include <filesystem>
-#include "TypeDefinition.h"
-#include "Network/ApiRequest.h"
-#include "UpdateCore/AppVersion.h"
-#include "UpdateCore/AppManifest.h"
+#include "UpdateCore/TypeDefinition.hpp"
+#include "Network/ApiRequest.hpp"
+#include "UpdateCore/AppVersion.hpp"
+#include "UpdateCore/AppManifest.hpp"
 #include "md5.h"
 
 class VerifyAndRePatch {

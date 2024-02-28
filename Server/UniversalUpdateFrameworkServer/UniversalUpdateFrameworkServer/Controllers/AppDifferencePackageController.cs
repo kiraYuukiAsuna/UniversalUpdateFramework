@@ -25,51 +25,53 @@ public class AppDifferencePackageController : ControllerBase
     }
 
     [HttpGet("GetCurrentAppDifferencePackage")]
-    public JsonResult GetCurrentAppDifferencePackage(string appname)
+    public JsonResult GetCurrentAppDifferencePackage(string appname, string channel, string platform)
     {
         try
         {
-            var jObject = m_AppDifferencePackageDataManager.GetCurrentData(appname);
+            var jObject = m_AppDifferencePackageDataManager.GetCurrentData(appname, channel, platform);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;
 
             return new JsonResult(rootElement);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new JsonResult(ex.ToString());
         }
     }
-    
+
     [HttpGet("GetAppDifferencePackage")]
-    public JsonResult GetAppDifferencePackage(string appname, string appversion)
+    public JsonResult GetAppDifferencePackage(string appname, string appversion, string channel, string platform)
     {
-        try{
-            var jObject = m_AppDifferencePackageDataManager.GetData(appname, appversion);
+        try
+        {
+            var jObject = m_AppDifferencePackageDataManager.GetData(appname, appversion, channel, platform);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;
 
             return new JsonResult(rootElement);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new JsonResult(ex.ToString());
         }
     }
-    
+
     [HttpGet("DownloadCurrentDifferencePackage")]
-    public async Task<IActionResult> DownloadCurrentDifferencePackage(string appname)
+    public async Task<IActionResult> DownloadCurrentDifferencePackage(string appname, string channel, string platform)
     {
-        var fullPackageFileInfo = m_AppDifferencePackageDataManager.GetCurrentDifferencePackageFilePath(appname);
+        var fullPackageFileInfo =
+            m_AppDifferencePackageDataManager.GetCurrentDifferencePackageFilePath(appname, channel, platform);
         var fileFullPath = fullPackageFileInfo.filePath;
 
         if (!System.IO.File.Exists(fileFullPath))
         {
             return new EmptyResult();
         }
-        
+
         var fileInfo = new FileInfo(fileFullPath);
         var contentType = "application/octet-stream";
         var fileName = fileInfo.Name;
@@ -80,12 +82,15 @@ public class AppDifferencePackageController : ControllerBase
         {
             var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
             var start = long.Parse(match.Groups[1].Value);
-            var end = string.IsNullOrEmpty(match.Groups[2].Value) ? contentLength - 1 : long.Parse(match.Groups[2].Value);
+            var end = string.IsNullOrEmpty(match.Groups[2].Value)
+                ? contentLength - 1
+                : long.Parse(match.Groups[2].Value);
             contentLength = end - start + 1;
             fileStream.Seek(start, SeekOrigin.Begin);
             Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
-            Response.StatusCode = (int)HttpStatusCode.PartialContent;
+            Response.StatusCode = (int) HttpStatusCode.PartialContent;
         }
+
         Response.Headers.Add("Accept-Ranges", "bytes");
         Response.ContentType = contentType;
         Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
@@ -93,18 +98,20 @@ public class AppDifferencePackageController : ControllerBase
         await fileStream.CopyToAsync(Response.Body);
         return new EmptyResult();
     }
-    
+
     [HttpGet("DownloadDifferencePackage")]
-    public async Task<IActionResult> DownloadDifferencePackage(string appname, string appversion)
+    public async Task<IActionResult> DownloadDifferencePackage(string appname, string appversion, string channel,
+        string platform)
     {
-        var fullPackageFileInfo = m_AppDifferencePackageDataManager.getDifferencePackageFilePath(appname, appversion);
+        var fullPackageFileInfo =
+            m_AppDifferencePackageDataManager.getDifferencePackageFilePath(appname, appversion, channel, platform);
         var fileFullPath = fullPackageFileInfo.filePath;
 
         if (!System.IO.File.Exists(fileFullPath))
         {
             return new EmptyResult();
         }
-        
+
         var fileInfo = new FileInfo(fileFullPath);
         var contentType = "application/octet-stream";
         var fileName = fileInfo.Name;
@@ -115,12 +122,15 @@ public class AppDifferencePackageController : ControllerBase
         {
             var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
             var start = long.Parse(match.Groups[1].Value);
-            var end = string.IsNullOrEmpty(match.Groups[2].Value) ? contentLength - 1 : long.Parse(match.Groups[2].Value);
+            var end = string.IsNullOrEmpty(match.Groups[2].Value)
+                ? contentLength - 1
+                : long.Parse(match.Groups[2].Value);
             contentLength = end - start + 1;
             fileStream.Seek(start, SeekOrigin.Begin);
             Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
-            Response.StatusCode = (int)HttpStatusCode.PartialContent;
+            Response.StatusCode = (int) HttpStatusCode.PartialContent;
         }
+
         Response.Headers.Add("Accept-Ranges", "bytes");
         Response.ContentType = contentType;
         Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");

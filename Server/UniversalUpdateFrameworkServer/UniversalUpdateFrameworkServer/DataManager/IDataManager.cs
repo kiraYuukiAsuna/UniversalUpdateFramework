@@ -4,16 +4,17 @@ namespace UniversalUpdateFrameworkServer.DataManager;
 
 public interface IDataManager
 {
-    public JObject GetCurrentData(string appname);
+    public JObject GetCurrentData(string appname, string channel, string platform);
 
-    public JObject GetData(string appname, string appversion);
+    public JObject GetData(string appname, string appversion, string channel, string platform);
 }
 
 public static class DataManagerUtil
 {
-    public static List<string> getAllVersion(string appFolderPath, string appname)
+    public static List<string> getAllVersion(string appFolderPath, string appname, string channel, string platform)
     {
-        var versionconfigJsonFilePath = Path.Combine(appFolderPath, "versionconfig.json");
+        var versionconfigJsonFilePath = Path.Combine(appFolderPath, channel, platform,
+            "versionconfig.json");
         List<string>? versions = new List<string>();
         if (File.Exists(versionconfigJsonFilePath))
         {
@@ -24,15 +25,19 @@ public static class DataManagerUtil
                 versions = ((JArray) obj["versions"]!).ToObject<List<string>>();
             }
         }
+
         return versions;
     }
 
-    public static JObject getCurrentData(string appFolderPath, string appname, string filename)
+    public static JObject getCurrentData(string appFolderPath, string appname, string channel, string platform,
+        string filename)
     {
         string currentVersionFolderName = "";
         string appVersionFilePath = "";
 
-        var versionconfigJsonFilePath = Path.Combine(appFolderPath, "versionconfig.json");
+        var appVersionsPath = Path.Combine(appFolderPath, channel, platform);
+
+        var versionconfigJsonFilePath = Path.Combine(appVersionsPath, "versionconfig.json");
         if (File.Exists(versionconfigJsonFilePath))
         {
             string currentFileContent = File.ReadAllText(versionconfigJsonFilePath);
@@ -43,11 +48,11 @@ public static class DataManagerUtil
             }
         }
 
-        var currentVersionFolderPath = Path.Combine(appFolderPath, currentVersionFolderName);
+        var currentVersionFolderPath = Path.Combine(appVersionsPath, currentVersionFolderName);
 
         if (!Directory.Exists(currentVersionFolderPath))
         {
-            var versionFolders = Directory.GetDirectories(appFolderPath)
+            var versionFolders = Directory.GetDirectories(appVersionsPath)
                 .OrderByDescending(f => new FileInfo(f).Name).ToArray();
 
             bool bGetOneVersion = false;
@@ -79,11 +84,13 @@ public static class DataManagerUtil
         return JObject.Parse(fileContent);
     }
 
-    public static JObject getData(string appFolderPath, string appname, string appversion, string filename)
+    public static JObject getData(string appFolderPath, string appname, string appversion, string channel,
+        string platform, string filename)
     {
         string currentVersionFolderPath = "";
         string appVersionFilePath = "";
-        var versionFolders = Directory.GetDirectories(appFolderPath)
+        var versionFolders = Directory
+            .GetDirectories(Path.Combine(appFolderPath, channel, platform))
             .OrderByDescending(f => new FileInfo(f).Name).ToArray();
 
         bool bGetOneVersion = false;

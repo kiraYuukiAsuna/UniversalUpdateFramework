@@ -24,35 +24,36 @@ public class AppManifestController : ControllerBase
     }
 
     [HttpGet("GetCurrentAppManifest")]
-    public JsonResult GetCurrentAppManifest(string appname)
+    public JsonResult GetCurrentAppManifest(string appname, string channel, string platform)
     {
         try
         {
-            var jObject = m_AppManifestDataManager.GetCurrentData(appname);
+            var jObject = m_AppManifestDataManager.GetCurrentData(appname, channel, platform);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;
 
             return new JsonResult(rootElement);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new JsonResult(ex.ToString());
         }
     }
-    
+
     [HttpGet("GetAppManifest")]
-    public JsonResult GetAppManifest(string appname, string appversion)
+    public JsonResult GetAppManifest(string appname, string appversion, string channel, string platform)
     {
-        try{
-            var jObject = m_AppManifestDataManager.GetData(appname, appversion);
+        try
+        {
+            var jObject = m_AppManifestDataManager.GetData(appname, appversion, channel, platform);
             string jsonString = jObject.ToString();
             JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
             JsonElement rootElement = jsonDocument.RootElement;
 
             return new JsonResult(rootElement);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             return new JsonResult(ex.ToString());
         }

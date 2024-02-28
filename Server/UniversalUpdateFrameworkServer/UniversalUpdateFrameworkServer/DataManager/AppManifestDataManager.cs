@@ -17,20 +17,22 @@ public class AppManifestDataManager : IDataManager
     {
         return Path.Combine(m_AppDataFolderPath, appname);
     }
-    
-    public JObject GetCurrentData(string appname)
+
+    public JObject GetCurrentData(string appname, string channel, string platform)
     {
         lock (m_Mutex)
         {
-            return DataManagerUtil.getCurrentData(getAppFolderPath(appname), appname, "appmanifest.json");
+            return DataManagerUtil.getCurrentData(getAppFolderPath(appname), appname, channel, platform,
+                "appmanifest.json");
         }
     }
 
-    public JObject GetData(string appname, string appversion)
+    public JObject GetData(string appname, string appversion, string channel, string platform)
     {
         lock (m_Mutex)
         {
-            return DataManagerUtil.getData(getAppFolderPath(appname), appname, appversion, "appmanifest.json");
+            return DataManagerUtil.getData(getAppFolderPath(appname), appname, appversion, channel, platform,
+                "appmanifest.json");
         }
     }
 }
