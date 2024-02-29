@@ -90,7 +90,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
             std::filesystem::create_directories(out.parent_path());
         }
 
-        std::string shellCommand = std::format(R"(hdiffz.exe {} {} {})", oldPath.string(), newPath.string(), outputPath.string());
+        std::string shellCommand = std::format(R"(hdiffz.exe "{}" "{}" "{}")", oldPath.string(), newPath.string(), outputPath.string());
 
         system(shellCommand.c_str());
     }
@@ -123,7 +123,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
         std::filesystem::remove(differencePackageFile);
     }
 
-    std::string shellCommand = std::format(R"(hdiffz.exe -c-zlib "" {} {})", differencepackageFolderPath.string(),
+    std::string shellCommand = std::format(R"(hdiffz.exe -c-zlib "" "{}" "{}")", differencepackageFolderPath.string(),
                                            differencePackageFile.string());
 
     system(shellCommand.c_str());

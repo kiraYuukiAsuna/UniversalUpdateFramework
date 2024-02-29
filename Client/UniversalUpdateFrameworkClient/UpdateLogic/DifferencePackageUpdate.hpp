@@ -70,16 +70,9 @@ public:
                                                                           appDifferencePackageManifest.getNewAppVersion().getVersion().getVersionString());
         m_ApiRequest.DownloadDifferencePackage(m_NewVersion, differencePackageFile.string());
 
-        std::string shellCommand2 = std::format(R"(hpatchz.exe "" {} {})", differencePackageFile.string(),
-                                                (downloadRootPath /
-                                                 ("differencepackage_" +
-                                                  appVersion.getVersion().getVersionString() +
-                                                  "_uncompressed")).string());
-        std::cout << shellCommand2 << "\n";
-        system(shellCommand2.c_str());
-
-        auto uncompresssedPath = downloadRootPath / "differencepackage_uncompressed";
-        std::string shellCommand = std::format(R"(hpatchz.exe "" {} {})", differencePackageFile.string(),
+        auto uncompresssedPath = downloadRootPath /
+                                 ("differencepackage_" + appVersion.getVersion().getVersionString() + "_uncompressed");
+        std::string shellCommand = std::format(R"(hpatchz.exe "" "{}" "{}")", differencePackageFile.string(),
                                                uncompresssedPath.string());
         std::cout << shellCommand << "\n";
         system(shellCommand.c_str());
@@ -109,7 +102,7 @@ public:
                         std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))};
             }
 
-            std::string patchShellCommand = std::format(R"(hpatchz.exe {} {} {})", localFilePath.string(),
+            std::string patchShellCommand = std::format(R"(hpatchz.exe "{}" "{}" "{}")", localFilePath.string(),
                                                         diffFilePath.string(), tempUpdatePath.string());
             std::cout << patchShellCommand << "\n";
             system(patchShellCommand.c_str());

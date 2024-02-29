@@ -67,8 +67,9 @@ public:
         m_NewVersion.empty() ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
                              : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string());
 
-        auto uncompresssedPath = downloadRootPath / "fullpackage_uncompressed";
-        std::string shellCommand = std::format(R"(hpatchz.exe "" {} {})", fullPackageFile.string(),
+        auto uncompresssedPath =
+                downloadRootPath / ("fullpackage_" + appVersion.getVersion().getVersionString() + "_uncompressed");
+        std::string shellCommand = std::format(R"(hpatchz.exe "" "{}" "{}")", fullPackageFile.string(),
                                                uncompresssedPath.string());
         std::cout << shellCommand << "\n";
         system(shellCommand.c_str());

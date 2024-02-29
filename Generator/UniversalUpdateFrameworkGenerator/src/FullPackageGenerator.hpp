@@ -63,7 +63,7 @@ inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionF
 inline bool generateFullPackageManifestFile(std::filesystem::path appversionFolder, PackageBuildInfo info) {
     std::filesystem::path fullPackageFile = appversionFolder / "appfullpackage";
     std::cout << fullPackageFile.string() << "\n";
-    std::string shellCommand = std::format(R"(hdiffz.exe -c-zlib "" {} {})", info.newPath, fullPackageFile.string());
+    std::string shellCommand = std::format(R"(hdiffz.exe -c-zlib "" "{}" "{}")", info.newPath, fullPackageFile.string());
     std::cout << shellCommand << "\n";
 
     system(shellCommand.c_str());
