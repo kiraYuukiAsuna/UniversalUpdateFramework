@@ -72,6 +72,13 @@ MainWindow::MainWindow(QWidget *parent) :
             packageBuildInfo.platform = ui->Platform->text().toStdString();
             packageBuildInfo.appversion = ui->AppVersion->text().toStdString();
 
+//            packageBuildInfo.PackageMode = "DifferencePackage";
+//            packageBuildInfo.newPath = R"(D:\WorkSpace\UnrealEngine\1.1.0)";
+//            packageBuildInfo.appname = "TestApplication";
+//            packageBuildInfo.channel = "Release";
+//            packageBuildInfo.platform = "Win";
+//            packageBuildInfo.appversion = "1.1.0";
+
             if (generateFullPackage(packageBuildInfo) != 0) {
                 QMessageBox::critical(this, "Error", "Generate FullPackage Failed!");
                 return;
@@ -119,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
             }
 
             PackageBuildInfo packageBuildInfo;
-            packageBuildInfo.PackageMode = "FullPackage";
+            packageBuildInfo.PackageMode = "DifferencePackage";
             packageBuildInfo.oldPath = ui->OldVersionPath->text().toStdString();
             packageBuildInfo.newPath = ui->NewVersionPath->text().toStdString();
             packageBuildInfo.appname = ui->AppName->text().toStdString();
@@ -127,6 +134,15 @@ MainWindow::MainWindow(QWidget *parent) :
             packageBuildInfo.platform = ui->Platform->text().toStdString();
             packageBuildInfo.appversion = ui->AppVersion->text().toStdString();
             packageBuildInfo.appbeforeversion = ui->OldAppVersion->text().toStdString();
+
+//            packageBuildInfo.PackageMode = "DifferencePackage";
+//            packageBuildInfo.oldPath = R"(C:/Users/KiraY/Desktop/UniversalUpdateFramework/Generator/UniversalUpdateFrameworkGeneratorGui/cmake-build-debug/TestApplication/Release/Win/1.0.0/fullpackage)";
+//            packageBuildInfo.newPath = R"(C:/Users/KiraY/Desktop/UniversalUpdateFramework/Generator/UniversalUpdateFrameworkGeneratorGui/cmake-build-debug/TestApplication/Release/Win/1.1.0/fullpackage)";
+//            packageBuildInfo.appname = "TestApplication";
+//            packageBuildInfo.channel = "Release";
+//            packageBuildInfo.platform = "Win";
+//            packageBuildInfo.appversion = "1.1.0";
+//            packageBuildInfo.appbeforeversion = "1.0.0";
 
             if (generateDifferencePackage(packageBuildInfo) != 0) {
                 QMessageBox::critical(this, "Error", "Generate DifferencePackage Failed!");
