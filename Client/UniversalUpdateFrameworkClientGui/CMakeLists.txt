@@ -7,8 +7,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_PREFIX_PATH "C:/Qt/6.6.0/msvc2019_64")
-
 find_package(Qt6 COMPONENTS
         Core
         Gui
@@ -34,14 +32,13 @@ set(QRESOURCE
         Resource/resources.qrc
 )
 
-file(GLOB_RECURSE SRC_LIST
+file(GLOB_RECURSE UpdateCore_SRC_LIST
         "${PROJECT_SOURCE_DIR}/../UniversalUpdateFrameworkClient/src/*.cpp"
-        "${PROJECT_SOURCE_DIR}/../UniversalUpdateFrameworkClient/src/*.ui"
         "${PROJECT_SOURCE_DIR}/../UniversalUpdateFrameworkClient/src/*.h"
         "${PROJECT_SOURCE_DIR}/../UniversalUpdateFrameworkClient/src/*.hpp"
 )
 
-file(GLOB_RECURSE UpdateCore_SRC_LIST
+file(GLOB_RECURSE SRC_LIST
         "${PROJECT_SOURCE_DIR}/src/*.cpp"
         "${PROJECT_SOURCE_DIR}/src/*.ui"
         "${PROJECT_SOURCE_DIR}/src/*.h"
