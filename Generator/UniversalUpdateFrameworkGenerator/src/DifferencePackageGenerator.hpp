@@ -16,15 +16,15 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
         return false;
     }
 
-    nlohmann::json appfullpackagemanifestJson;
-    appfullpackagemanifestJson["appname"] = info.appname;
-    appfullpackagemanifestJson["appversion"] = info.appversion;
-    appfullpackagemanifestJson["filename"] = "appdifferencepackage";
-    appfullpackagemanifestJson["appbeforeversion"] = info.appbeforeversion;
+    nlohmann::json appdifferencepackagemanifestJson;
+    appdifferencepackagemanifestJson["appname"] = info.appname;
+    appdifferencepackagemanifestJson["appversion"] = info.appversion;
+    appdifferencepackagemanifestJson["filename"] = "appdifferencepackage";
+    appdifferencepackagemanifestJson["appbeforeversion"] = info.appbeforeversion;
 
-    appfullpackagemanifestJson["diff_updatefiles"];
-    appfullpackagemanifestJson["diff_newfiles"];
-    appfullpackagemanifestJson["diff_deletedfiles"];
+    appdifferencepackagemanifestJson["diff_updatefiles"];
+    appdifferencepackagemanifestJson["diff_newfiles"];
+    appdifferencepackagemanifestJson["diff_deletedfiles"];
 
     std::vector<std::string> newFiles;
     std::vector<std::string> oldFiles;
@@ -78,7 +78,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
     std::cout << "Same elements (Update): ";
     for (const auto&element: same_elements) {
         std::cout << element << "\n";
-        appfullpackagemanifestJson["diff_updatefiles"].push_back(element);
+        appdifferencepackagemanifestJson["diff_updatefiles"].push_back(element);
 
         std::filesystem::path oldPath = std::filesystem::path(info.oldPath) / element;
         std::filesystem::path newPath = std::filesystem::path(info.newPath) / element;
@@ -101,7 +101,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
     std::cout << "New elements in newFiles: ";
     for (const auto&element: new_elements) {
         std::cout << element << "\n";
-        appfullpackagemanifestJson["diff_newfiles"].push_back(element);
+        appdifferencepackagemanifestJson["diff_newfiles"].push_back(element);
         std::filesystem::path from = std::filesystem::path(info.newPath) / element;
         std::filesystem::path to = differencepackageFolderPath / element;
 
@@ -116,7 +116,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
     std::cout << "Deleted elements in newFiles: ";
     for (const auto&element: deleted_elements) {
         std::cout << element << "\n";
-        appfullpackagemanifestJson["diff_deletedfiles"].push_back(element);
+        appdifferencepackagemanifestJson["diff_deletedfiles"].push_back(element);
     }
     std::cout << std::endl;
 
@@ -131,9 +131,9 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
 
     system(shellCommand.c_str());
 
-    appfullpackagemanifestJson["md5"] = calcFileMd5(differencePackageFile.string());
+    appdifferencepackagemanifestJson["md5"] = calcFileMd5(differencePackageFile.string());
 
-    appdifferencepackagemanifestFileFileStream << appfullpackagemanifestJson;
+    appdifferencepackagemanifestFileFileStream << appdifferencepackagemanifestJson;
     appdifferencepackagemanifestFileFileStream.close();
 
     return true;
