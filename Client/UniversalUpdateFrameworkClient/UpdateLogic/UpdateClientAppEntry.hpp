@@ -10,11 +10,11 @@
 #include "UpdateCore/UpdateConfig.hpp"
 #include "Network/ApiRequest.hpp"
 
-inline void handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::string updateToNewVersion) {
+inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::string updateToNewVersion) {
     switch (mode) {
         case UpdateMode::Unknown: {
             std::cout << "Unknown update mode!\n";
-            break;
+            return {false};
         }
         case UpdateMode::FullPackageUpdate: {
             FullPackageUpdate update(config.getConfig().host,
@@ -32,14 +32,14 @@ inline void handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::stri
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                return res;
             }
-
-            break;
+            return res;
         }
         case UpdateMode::DifferencePackageUpdate: {
             if (config.getConfig().localCurrentVersion == "x.x.x") {
                 std::cout << "Invalid local current version!\n";
-                return;
+                return {false};
             }
 
             DifferencePackageUpdate update(config.getConfig().host,
@@ -58,14 +58,14 @@ inline void handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::stri
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                return res;
             }
-
-            break;
+            return res;
         }
         case UpdateMode::MultiVersionDifferencePackageUpdate: {
             if (config.getConfig().localCurrentVersion == "x.x.x") {
                 std::cout << "Invaid local current version!\n";
-                return;
+                return {false};
             }
 
             MultiVersionDifferencePackageUpdate update(config.getConfig().host,
@@ -84,9 +84,9 @@ inline void handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::stri
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                return res;
             }
-
-            break;
+            return res;
         }
         case UpdateMode::DifferenceUpdate: {
             DifferenceUpdate update(config.getConfig().host,
@@ -104,9 +104,9 @@ inline void handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::stri
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                return res;
             }
-
-            break;
+            return res;
         }
     }
 }

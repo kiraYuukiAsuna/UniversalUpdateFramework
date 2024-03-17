@@ -39,3 +39,9 @@ private:
     ErrorCode m_ErrorCode{ErrorCode::NoError};
     std::string m_ErrorMessage{"DefaultErrorMessage"};
 };
+
+#ifdef WIN32
+    constexpr std::string hpatchzExecuable = "hpatchz.exe";
+#elif defined __linux
+    constexpr std::string hpatchzExecuable = "./hpatchz";
+#endif

@@ -28,7 +28,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
 
     std::vector<std::string> newFiles;
     std::vector<std::string> oldFiles;
-    for (auto &directoryEntry: std::filesystem::recursive_directory_iterator(info.newPath)) {
+    for (auto&directoryEntry: std::filesystem::recursive_directory_iterator(info.newPath)) {
         if (!directoryEntry.is_directory()) {
             auto relativePath = std::filesystem::relative(directoryEntry.path().string(),
                                                           std::filesystem::path(info.newPath));
@@ -36,7 +36,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
         }
     }
 
-    for (auto &directoryEntry: std::filesystem::recursive_directory_iterator(info.oldPath)) {
+    for (auto&directoryEntry: std::filesystem::recursive_directory_iterator(info.oldPath)) {
         if (!directoryEntry.is_directory()) {
             auto relativePath = std::filesystem::relative(directoryEntry.path().string(),
                                                           std::filesystem::path(info.oldPath));
@@ -63,7 +63,8 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
         // 找到newFiles比oldFiles缺少的元素
         std::set_difference(oldFiles.begin(), oldFiles.end(), newFiles.begin(), newFiles.end(),
                             std::back_inserter(deleted_elements));
-    } catch (std::exception &e) {
+    }
+    catch (std::exception&e) {
         std::cerr << "Exception in :" << e.what() << "\n";
     }
 
@@ -75,7 +76,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
 
     // 输出结果
     std::cout << "Same elements (Update): ";
-    for (const auto &element: same_elements) {
+    for (const auto&element: same_elements) {
         std::cout << element << "\n";
         appfullpackagemanifestJson["diff_updatefiles"].push_back(element);
 
@@ -90,14 +91,15 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
             std::filesystem::create_directories(out.parent_path());
         }
 
-        std::string shellCommand = std::format(R"(hdiffz.exe "{}" "{}" "{}")", oldPath.string(), newPath.string(), outputPath.string());
+        std::string shellCommand = std::format(R"({} "{}" "{}" "{}")", hdiffzExecuable, oldPath.string(),
+                                               newPath.string(), outputPath.string());
 
         system(shellCommand.c_str());
     }
     std::cout << std::endl;
 
     std::cout << "New elements in newFiles: ";
-    for (const auto &element: new_elements) {
+    for (const auto&element: new_elements) {
         std::cout << element << "\n";
         appfullpackagemanifestJson["diff_newfiles"].push_back(element);
         std::filesystem::path from = std::filesystem::path(info.newPath) / element;
@@ -112,7 +114,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
     std::cout << std::endl;
 
     std::cout << "Deleted elements in newFiles: ";
-    for (const auto &element: deleted_elements) {
+    for (const auto&element: deleted_elements) {
         std::cout << element << "\n";
         appfullpackagemanifestJson["diff_deletedfiles"].push_back(element);
     }
@@ -123,7 +125,8 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
         std::filesystem::remove(differencePackageFile);
     }
 
-    std::string shellCommand = std::format(R"(hdiffz.exe -c-zlib "" "{}" "{}")", differencepackageFolderPath.string(),
+    std::string shellCommand = std::format(R"({} -c-zlib "" "{}" "{}")", hdiffzExecuable,
+                                           differencepackageFolderPath.string(),
                                            differencePackageFile.string());
 
     system(shellCommand.c_str());

@@ -12,32 +12,34 @@
 
 class FullPackageUpdate {
 public:
-    FullPackageUpdate(const std::string &host, const std::string &appName, std::string channel, std::string platform,
+    FullPackageUpdate(const std::string&host, const std::string&appName, std::string channel, std::string platform,
                       std::string appPath,
                       std::string downloadPath, std::string newVersion)
-            : m_ApiRequest(host, appName, channel, platform), m_Host(host), m_AppName(appName), m_Channel(channel),
-              m_Platform(platform), m_AppPath(std::move(appPath)),
-              m_DownloadPath(std::move(downloadPath)), m_NewVersion(std::move(newVersion)) {
+        : m_ApiRequest(host, appName, channel, platform), m_Host(host), m_AppName(appName), m_Channel(channel),
+          m_Platform(platform), m_AppPath(std::move(appPath)),
+          m_DownloadPath(std::move(downloadPath)), m_NewVersion(std::move(newVersion)) {
     }
 
     ReturnWrapper execute() {
-        auto [result1, appVersionContent] = m_NewVersion.empty() ? m_ApiRequest.GetCurrentAppVersion()
-                                                                 : m_ApiRequest.GetAppVersion(m_NewVersion);
+        auto [result1, appVersionContent] = m_NewVersion.empty()
+                                                ? m_ApiRequest.GetCurrentAppVersion()
+                                                : m_ApiRequest.GetAppVersion(m_NewVersion);
         if (!result1.getStatus()) {
             return result1;
         }
         auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
 
-        auto [result2, appManifestContent] = m_NewVersion.empty() ? m_ApiRequest.GetCurrentAppManifest()
-                                                                  : m_ApiRequest.GetAppManifest(m_NewVersion);
+        auto [result2, appManifestContent] = m_NewVersion.empty()
+                                                 ? m_ApiRequest.GetCurrentAppManifest()
+                                                 : m_ApiRequest.GetAppManifest(m_NewVersion);
         if (!result2.getStatus()) {
             return result2;
         }
         auto appManifest = AppManifest(nlohmann::json::parse(appManifestContent));
 
         auto [result3, appFullPackageManifestContent] = m_NewVersion.empty()
-                                                        ? m_ApiRequest.GetCurrentAppFullPackageManifest()
-                                                        : m_ApiRequest.GetAppFullPackageManifest(m_NewVersion);
+                                                            ? m_ApiRequest.GetCurrentAppFullPackageManifest()
+                                                            : m_ApiRequest.GetAppFullPackageManifest(m_NewVersion);
         if (!result3.getStatus()) {
             return result3;
         }
@@ -56,7 +58,7 @@ public:
                                     ".json");
         std::filesystem::path appFullPackageManifestPath =
                 downloadRootPath / ("appfullpackagemanifest_" + appFullPackageManifest.getAppVersion().getVersion().
-                        getVersionString() + ".json");
+                                    getVersionString() + ".json");
 
         util::saveToFile(appVersionContent, appVersionPath);
         util::saveToFile(appManifestContent, appManifestPath);
@@ -64,12 +66,13 @@ public:
 
         std::filesystem::path fullPackageFile =
                 downloadRootPath / ("fullpackage_" + appVersion.getVersion().getVersionString());
-        m_NewVersion.empty() ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
-                             : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string());
+        m_NewVersion.empty()
+            ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
+            : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string());
 
         auto uncompresssedPath =
                 downloadRootPath / ("fullpackage_" + appVersion.getVersion().getVersionString() + "_uncompressed");
-        std::string shellCommand = std::format(R"(hpatchz.exe "" "{}" "{}")", fullPackageFile.string(),
+        std::string shellCommand = std::format(R"({} "" "{}" "{}")", hpatchzExecuable, fullPackageFile.string(),
                                                uncompresssedPath.string());
         std::cout << shellCommand << "\n";
         system(shellCommand.c_str());
@@ -77,23 +80,28 @@ public:
         std::error_code ec;
         std::filesystem::remove_all(m_AppPath, ec);
         if (ec) {
-            return {false, ErrorCode::RemoveOldVersionDirFailed,
-                    std::string(magic_enum::enum_name(ErrorCode::RemoveOldVersionDirFailed))};
+            return {
+                false, ErrorCode::RemoveOldVersionDirFailed,
+                std::string(magic_enum::enum_name(ErrorCode::RemoveOldVersionDirFailed))
+            };
         }
 
         std::filesystem::create_directories(m_AppPath, ec);
         if (ec) {
-            return {false, ErrorCode::CreateAppDirFailed,
-                    std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))};
+            return {
+                false, ErrorCode::CreateAppDirFailed,
+                std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))
+            };
         }
 
         std::filesystem::copy(uncompresssedPath, m_AppPath, std::filesystem::copy_options::recursive |
                                                             std::filesystem::copy_options::overwrite_existing, ec);
         if (ec) {
-            return {false, ErrorCode::CopyNewVersionDirFailed,
-                    std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed))};
-        }
-        {
+            return {
+                false, ErrorCode::CopyNewVersionDirFailed,
+                std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed))
+            };
+        } {
             auto result = VerifyAndRePatch::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
             if (!result.getStatus()) {
                 return result;
@@ -101,8 +109,10 @@ public:
         }
         std::filesystem::remove_all(m_DownloadPath, ec);
         if (ec) {
-            return {false, ErrorCode::DeleteDownloadDirFailed,
-                    std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))};
+            return {
+                false, ErrorCode::DeleteDownloadDirFailed,
+                std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))
+            };
         }
 
         return {true};
@@ -117,5 +127,4 @@ private:
     std::string m_AppPath;
     std::string m_DownloadPath;
     std::string m_NewVersion;
-
 };

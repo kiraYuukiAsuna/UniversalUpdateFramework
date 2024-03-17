@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <cstring>
 
 /* Type define */
 typedef unsigned int uint32;

@@ -12,3 +12,9 @@ struct PackageBuildInfo {
     std::string appversion;
     std::string appbeforeversion;
 };
+
+#ifdef WIN32
+    constexpr std::string hdiffzExecuable = "hdiffz.exe";
+#elif defined __linux
+    constexpr std::string hdiffzExecuable = "./hdiffz";
+#endif

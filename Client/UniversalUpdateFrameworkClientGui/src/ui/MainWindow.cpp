@@ -5,9 +5,9 @@
 #include <QMessageBox>
 #include "UpdateLogic/UpdateClientAppEntry.hpp"
 #include <QProcess>
+#include <QPushButton>
 
-MainWindow::MainWindow(QWidget *parent) :
-        QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     setWindowIcon(QIcon(Image::ImageAppIcon));
 
@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
         auto executableFileWorkingDir =
                 QApplication::applicationDirPath() + "/" + QString::fromStdString(m_AppSpecification.appExecutablePath);
         auto executableFileFullPath =
-                executableFileWorkingDir + "/" + QString::fromStdString(m_AppSpecification.appExecutableName) + ".exe";
+                executableFileWorkingDir + "/" + QString::fromStdString(m_AppSpecification.appExecutableName);
         qDebug() << executableFileFullPath;
         process.setWorkingDirectory(executableFileWorkingDir);
         process.startDetached(executableFileFullPath, arg);
@@ -73,13 +73,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
         ui->UpdateProgressBar->setValue(10);
 
-        result.get();
-
-        ui->UpdateProgressBar->setValue(100);
-
-        QMessageBox::information(this, "Info", "Update finished!");
+        auto updateResult = result.get();
+        if (updateResult.getStatus()) {
+            ui->UpdateProgressBar->setValue(100);
+            QMessageBox::information(this, "Info", "Update finished!");
+        }
+        else {
+            ui->UpdateProgressBar->setValue(0);
+            QMessageBox::critical(this, "Info",
+                                  "Update failed!" + QString::fromStdString(updateResult.getErrorMessage()));
+        }
 
         refresh();
+        m_AppSpecificationIo.writeToFile();
     });
 
 
@@ -112,20 +118,21 @@ void MainWindow::refresh() {
 
     m_ApiRequest = new ApiRequest(m_UpdateConfig.host, m_UpdateConfig.appName, m_UpdateConfig.channel,
                                   m_UpdateConfig.platform);
-    if (auto [result, appVersionContent] = m_ApiRequest->GetCurrentAppVersion();result.getStatus()) {
+    if (auto [result, appVersionContent] = m_ApiRequest->GetCurrentAppVersion(); result.getStatus()) {
         m_ServerCurrentAppVersion = new AppVersion(nlohmann::json::parse(appVersionContent));
         auto serverCurrentVersion = m_ServerCurrentAppVersion->getVersion();
 
         ui->ServerCurrentVersion->setText(
-                QString::fromStdString(m_ServerCurrentAppVersion->getVersion().getVersionString()));
+            QString::fromStdString(m_ServerCurrentAppVersion->getVersion().getVersionString()));
 
         if (localCurrentVersion < serverCurrentVersion) {
             ui->UpdateStatus->setText("New Version Available!");
-        } else {
+        }
+        else {
             ui->UpdateStatus->setText("No Update Available!");
         }
-
-    } else {
+    }
+    else {
         QMessageBox::critical(this, "Error", QString::fromStdString(result.getErrorMessage()));
         ui->UpdateStatus->setText("Network Error!");
     }
@@ -136,5 +143,4 @@ void MainWindow::initialize() {
     ui->UpdateModeSelect->addItem("MultiVersionDifferencePackageUpdate");
     ui->UpdateModeSelect->addItem("DirectDifferenceUpdate");
     ui->UpdateModeSelect->addItem("FullPackageUpdate");
-
 }

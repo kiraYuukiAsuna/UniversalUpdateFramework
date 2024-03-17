@@ -6,7 +6,7 @@
 #include "TypeDefinition.hpp"
 
 struct UpdateConfig {
-    std::string host{"127.0.0.1"};
+    std::string host{"127.0.0.1:5275"};
     std::string appName{"DefaultAPPName"};
     std::string appPath{"DefaultAppPath"};
     std::string downloadPath{"Download"};

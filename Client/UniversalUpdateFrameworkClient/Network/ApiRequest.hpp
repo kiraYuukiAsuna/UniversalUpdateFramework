@@ -239,7 +239,10 @@ private:
 // Check if the request was successful
         if (res && (res->status == 200 || res->status == 206)) {
             file.close();
-//            std::cout << "File Downloaded Successfully: " << filename << std::endl;
+            std::cout << "File Downloaded Successfully: " << localSaveFilePath << std::endl;
+
+            std::filesystem::permissions(localSaveFilePath, std::filesystem::perms::owner_all, std::filesystem::perm_options::add);
+
             return {{true}, localSaveFilePath};
         } else {
             std::cerr << "Failed To Download File: " << (res ? res->status : -1) << std::endl;

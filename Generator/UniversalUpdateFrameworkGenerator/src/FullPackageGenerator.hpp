@@ -6,6 +6,7 @@
 #include <iostream>
 #include "nlohmann/json.hpp"
 #include "md5.h"
+#include <format>
 
 inline bool generateFullPackageAppVersionFile(std::filesystem::path appversionFolder, PackageBuildInfo info) {
     std::filesystem::path appverionFilePath = appversionFolder / "appversion.json";
@@ -42,7 +43,7 @@ inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionF
     appmanifestJson["manifest"];
 
     std::filesystem::path newPath(info.newPath);
-    for (auto &directoryEntry: std::filesystem::recursive_directory_iterator(newPath)) {
+    for (auto&directoryEntry: std::filesystem::recursive_directory_iterator(newPath)) {
         if (!directoryEntry.is_directory()) {
             auto relativePath = std::filesystem::relative(directoryEntry.path(), std::filesystem::path(info.newPath));
             nlohmann::json fileInfo;
@@ -63,7 +64,8 @@ inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionF
 inline bool generateFullPackageManifestFile(std::filesystem::path appversionFolder, PackageBuildInfo info) {
     std::filesystem::path fullPackageFile = appversionFolder / "appfullpackage";
     std::cout << fullPackageFile.string() << "\n";
-    std::string shellCommand = std::format(R"(hdiffz.exe -c-zlib "" "{}" "{}")", info.newPath, fullPackageFile.string());
+    std::string shellCommand = std::format(R"({} -c-zlib "" "{}" "{}")", hdiffzExecuable, info.newPath,
+                                           fullPackageFile.string());
     std::cout << shellCommand << "\n";
 
     system(shellCommand.c_str());

@@ -1,6 +1,6 @@
 #include "UpdateLogic/UpdateClientAppEntry.hpp"
 
-inline int handleArgument(int argc, char *argv[]) {
+inline int handleArgument(int argc, char* argv[]) {
     try {
         cxxopts::Options options("UniversalUpdateFramework Client",
                                  "A tool that help you update your app.");
@@ -36,8 +36,9 @@ inline int handleArgument(int argc, char *argv[]) {
                 }
                 ApiRequest api(config.getConfig().host, config.getConfig().appName, config.getConfig().channel,
                                config.getConfig().platform);
-                auto [result1, appVersionContent] = updateToNewVersion.empty() ? api.GetCurrentAppVersion()
-                                                                               : api.GetAppVersion(updateToNewVersion);
+                auto [result1, appVersionContent] = updateToNewVersion.empty()
+                                                        ? api.GetCurrentAppVersion()
+                                                        : api.GetAppVersion(updateToNewVersion);
                 if (!result1.getStatus()) {
                     std::cout << "Cannot connect to serevr!\n";
                     return -1;
@@ -46,26 +47,35 @@ inline int handleArgument(int argc, char *argv[]) {
                 try {
                     auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
                     updateToNewVersion = appVersion.getVersion().getVersionString();
-                } catch (std::exception &e) {
+                }
+                catch (std::exception&e) {
                     std::cout << "Decode version info failed! Please check if the version given exist in the server!\n";
                     return -1;
                 }
 
-                handleUpdateMode(mode, config, updateToNewVersion);
-            } else {
+                auto updateResult = handleUpdateMode(mode, config, updateToNewVersion);
+                if (updateResult.getStatus()) {
+                    std::cout << "Update successfully!\n";
+                }
+                else {
+                    std::cout << "Update failed! " << updateResult.getErrorMessage() << "\n";
+                }
+            }
+            else {
                 std::cout << "No config file!\n";
             }
-
-        } else {
+        }
+        else {
             std::cout << "No update mode!\n";
         }
 
         return 0;
-    } catch (std::exception &e) {
+    }
+    catch (std::exception&e) {
         std::cerr << "Exception:" << e.what() << "\n";
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     return handleArgument(argc, argv);
 }
