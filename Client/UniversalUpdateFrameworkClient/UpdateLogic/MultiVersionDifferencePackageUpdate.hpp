@@ -2,8 +2,9 @@
 
 #include "UpdateCore/TypeDefinition.hpp"
 #include "Network/ApiRequest.hpp"
-#include "UpdateCore/AppVersion.hpp"
-#include "UpdateCore/DifferencePackageManifest.hpp"
+#include <Version.hpp>
+#include <AppVersion.hpp>
+#include <DifferencePackageManifest.hpp>
 #include "DifferencePackageUpdate.hpp"
 
 class MultiVersionDifferencePackageUpdate {
@@ -44,7 +45,7 @@ public:
                     std::string(magic_enum::enum_name(ErrorCode::HttpRequestError))};
         }
 
-        auto appCurrentVersion = AppVersion(nlohmann::json::parse(currentVersionContent));
+        AppVersionInfo appCurrentVersion = nlohmann::json::parse(currentVersionContent);
 
         bool bFindOldVersion{false};
         int oldVersionIdx = -1;
@@ -63,7 +64,7 @@ public:
         bool bFindCurrentVersion{false};
         int currentVersionIdx = -1;
         for (int idx = 0; idx < versions.size(); idx++) {
-            if (versions.at(idx) == appCurrentVersion.getVersion()) {
+            if (versions.at(idx) == Version{appCurrentVersion.AppVersion}) {
                 bFindCurrentVersion = true;
                 currentVersionIdx = idx;
             }

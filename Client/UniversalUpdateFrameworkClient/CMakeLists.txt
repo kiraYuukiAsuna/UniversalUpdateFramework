@@ -11,18 +11,20 @@ include_directories(
         ../../ThirdParty/magic_enum
         ../../Common/md5
         ../../Common/util
+        ../../ThirdParty/asio-1.30.2/include
+        ../../Generator/UniversalUpdateFrameworkGenerator/src
 )
 
 set(ProjectHeader
         ../../Common/md5/md5.h
         ../../Common/util/util.hpp
 
-        Network/ApiRequest.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/AppVersion.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/AppManifest.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/FullPackageManifest.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/DifferencePackageManifest.hpp
 
-        UpdateCore/AppManifest.hpp
-        UpdateCore/AppVersion.hpp
-        UpdateCore/DifferencePackageManifest.hpp
-        UpdateCore/FullPackageManifest.hpp
+        Network/ApiRequest.hpp
 
         UpdateLogic/FullPackageUpdate.hpp
         UpdateLogic/DifferencePackageUpdate.hpp

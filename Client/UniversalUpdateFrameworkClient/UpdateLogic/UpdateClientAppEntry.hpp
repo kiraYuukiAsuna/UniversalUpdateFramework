@@ -9,6 +9,7 @@
 #include "cxxopts.hpp"
 #include "UpdateCore/UpdateConfig.hpp"
 #include "Network/ApiRequest.hpp"
+#include <Defination.hpp>
 
 inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::string updateToNewVersion) {
     switch (mode) {

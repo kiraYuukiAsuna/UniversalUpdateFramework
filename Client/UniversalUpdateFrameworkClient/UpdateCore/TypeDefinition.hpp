@@ -4,14 +4,6 @@
 #include <utility>
 #include "UpdateCore/ErrorCode.hpp"
 
-enum class UpdateMode {
-    Unknown,
-    FullPackageUpdate,
-    DifferencePackageUpdate,
-    MultiVersionDifferencePackageUpdate,
-    DifferenceUpdate
-};
-
 class ReturnWrapper {
 public:
     ReturnWrapper(const bool status)
@@ -41,7 +33,7 @@ private:
 };
 
 #ifdef WIN32
-    constexpr std::string hpatchzExecuable = "hpatchz.exe";
+    constexpr const char* hpatchzExecuable = "hpatchz.exe";
 #elif defined __linux
-    constexpr std::string hpatchzExecuable = "./hpatchz";
+    constexpr const char* hpatchzExecuable = "./hpatchz";
 #endif

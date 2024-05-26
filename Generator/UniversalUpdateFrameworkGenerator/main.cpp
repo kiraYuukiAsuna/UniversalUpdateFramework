@@ -1,5 +1,6 @@
 ﻿#include "src/GeneratorAppEntry.h"
 #include "cxxopts.hpp"
+#include "src/UpdatePackageBuild.hpp"
 
 // .\UniversalUpdateFrameworkGenerator.exe -m DifferencePackage -o D:\WorkSpace\UnrealEngine\1.1.0 -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0 -b 1.1.0
 // .\UniversalUpdateFrameworkGenerator.exe -m FullPackage -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0
@@ -29,33 +30,33 @@ int main(int argc, char *argv[]) {
         if (result.count("mode")) {
             std::string mode = result["mode"].as<std::string>();
             if (mode == "FullPackage") {
-                PackageBuildInfo info;
+                UpdatePackageBuildInfo info;
                 if (result.count("appname")) {
-                    info.appname = result["appname"].as<std::string>();
+                    info.AppName = result["appname"].as<std::string>();
                 } else {
                     std::cout << "Missing appname.\n";
                     return -1;
                 }
                 if (result.count("channel")) {
-                    info.channel = result["channel"].as<std::string>();
+                    info.Channel = result["channel"].as<std::string>();
                 } else {
                     std::cout << "Missing channel.\n";
                     return -1;
                 }
                 if (result.count("platform")) {
-                    info.platform = result["platform"].as<std::string>();
+                    info.Platform = result["platform"].as<std::string>();
                 } else {
                     std::cout << "Missing platform.\n";
                     return -1;
                 }
                 if (result.count("appversion")) {
-                    info.appversion = result["appversion"].as<std::string>();
+                    info.AppCurrentVersion = result["appversion"].as<std::string>();
                 } else {
                     std::cout << "Missing appversion.\n";
                     return -1;
                 }
                 if (result.count("newPath")) {
-                    info.newPath = result["newPath"].as<std::string>();
+                    info.NewVersionPath = result["newPath"].as<std::string>();
                 } else {
                     std::cout << "Missing newPath.\n";
                     return -1;
@@ -63,69 +64,69 @@ int main(int argc, char *argv[]) {
 
 
 
-                PackageBuildInfo packageBuildInfo;
+                UpdatePackageBuildInfo packageBuildInfo;
                 packageBuildInfo.PackageMode = "FullPackage";
-                packageBuildInfo.newPath = info.newPath;
-                packageBuildInfo.appname = info.appname;
-                packageBuildInfo.channel = info.channel;
-                packageBuildInfo.platform = info.platform;
-                packageBuildInfo.appversion = info.appversion;
+                packageBuildInfo.NewVersionPath = info.NewVersionPath;
+                packageBuildInfo.AppName = info.AppName;
+                packageBuildInfo.Channel = info.Channel;
+                packageBuildInfo.Platform = info.Platform;
+                packageBuildInfo.AppCurrentVersion = info.AppCurrentVersion;
 
                 return generateFullPackage(packageBuildInfo);
             } else if (mode == "DifferencePackage") {
-                PackageBuildInfo info;
+                UpdatePackageBuildInfo info;
                 if (result.count("appname")) {
-                    info.appname = result["appname"].as<std::string>();
+                    info.AppName = result["appname"].as<std::string>();
                 } else {
                     std::cout << "Missing appname.\n";
                     return -1;
                 }
                 if (result.count("channel")) {
-                    info.channel = result["channel"].as<std::string>();
+                    info.Channel = result["channel"].as<std::string>();
                 } else {
                     std::cout << "Missing channel.\n";
                     return -1;
                 }
                 if (result.count("platform")) {
-                    info.platform = result["platform"].as<std::string>();
+                    info.Platform = result["platform"].as<std::string>();
                 } else {
                     std::cout << "Missing platform.\n";
                     return -1;
                 }
                 if (result.count("appversion")) {
-                    info.appversion = result["appversion"].as<std::string>();
+                    info.AppCurrentVersion = result["appversion"].as<std::string>();
                 } else {
                     std::cout << "Missing appversion.\n";
                     return -1;
                 }
                 if (result.count("appbeforeversion")) {
-                    info.appbeforeversion = result["appbeforeversion"].as<std::string>();
+                    info.AppBeforeVersion = result["appbeforeversion"].as<std::string>();
                 } else {
                     std::cout << "Missing appbeforeversion.\n";
                     return -1;
                 }
                 if (result.count("newPath")) {
-                    info.newPath = result["newPath"].as<std::string>();
+                    info.NewVersionPath = result["newPath"].as<std::string>();
                 } else {
                     std::cout << "Missing newPath.\n";
                     return -1;
                 }
                 if (result.count("oldPath")) {
-                    info.oldPath = result["oldPath"].as<std::string>();
+                    info.OldVersionPath = result["oldPath"].as<std::string>();
                 } else {
                     std::cout << "Missing oldPath.\n";
                     return -1;
                 }
 
-                PackageBuildInfo packageBuildInfo;
+                UpdatePackageBuildInfo packageBuildInfo;
                 packageBuildInfo.PackageMode = "DifferencePackage";
-                packageBuildInfo.oldPath = info.oldPath;
-                packageBuildInfo.newPath = info.newPath;
-                packageBuildInfo.appname = info.appname;
-                packageBuildInfo.channel = info.channel;
-                packageBuildInfo.platform = info.platform;
-                packageBuildInfo.appversion = info.appversion;
-                packageBuildInfo.appbeforeversion = info.appbeforeversion;
+                packageBuildInfo.OldVersionPath = info.OldVersionPath;
+                packageBuildInfo.NewVersionPath = info.NewVersionPath;
+                packageBuildInfo.AppName = info.AppName;
+                packageBuildInfo.Channel = info.Channel;
+                packageBuildInfo.Platform = info.Platform;
+                packageBuildInfo.AppCurrentVersion = info.AppCurrentVersion;
+                packageBuildInfo.AppBeforeVersion = info.AppBeforeVersion;
 
                 return generateDifferencePackage(packageBuildInfo);
             } else {

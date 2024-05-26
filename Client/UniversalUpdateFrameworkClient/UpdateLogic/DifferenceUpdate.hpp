@@ -2,8 +2,8 @@
 
 #include "Network/ApiRequest.hpp"
 #include "nlohmann/json.hpp"
-#include "UpdateCore/AppVersion.hpp"
-#include "UpdateCore/AppManifest.hpp"
+#include <AppVersion.hpp>
+#include <AppManifest.hpp>
 #include "md5.h"
 #include "UpdateLogic/VerifyAndRePatch.hpp"
 
@@ -24,22 +24,22 @@ public:
         if (!result1.getStatus()) {
             return result1;
         }
-        auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
+        AppVersionInfo appVersion = nlohmann::json::parse(appVersionContent);
 
         auto [result2, appManifestContent] = m_ApiRequest.GetAppManifest(m_NewVersion);
         if (!result2.getStatus()) {
             return result2;
         }
-        auto appManifest = AppManifest(nlohmann::json::parse(appManifestContent));
+        AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
 
         std::vector<std::string> newFiles;
         std::vector<std::string> oldFiles;
 
         std::unordered_map<std::string, std::string> serverMd5Map; // [filepath, md5]
 
-        for (auto &fileManifest: appManifest.getManifestData()) {
-            newFiles.push_back(fileManifest.filePath);
-            serverMd5Map.insert({fileManifest.filePath, fileManifest.md5});
+        for (auto &fileManifest: appManifest.Manifests) {
+            newFiles.push_back(fileManifest.FilePath);
+            serverMd5Map.insert({fileManifest.FilePath, fileManifest.Md5});
         }
 
         if (!std::filesystem::exists(m_AppPath)) {
@@ -106,7 +106,7 @@ public:
                 if (errorCode) {
                     return {false, ErrorCode::DeleteFileFailed, errorCode.message()};
                 }
-                auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.getVersion().getVersionString(),
+                auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                             serverMd5, localFilePath);
                 if (!result.getStatus()) {
                     return {false, ErrorCode::DownloadFileFailed, result.getErrorMessage()};
@@ -127,7 +127,7 @@ public:
             }
 
             auto serverMd5 = serverMd5Map[file];
-            auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.getVersion().getVersionString(),
+            auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                         serverMd5, localFilePath.string());
             if (!result.getStatus()) {
                 return {false, ErrorCode::DownloadFileFailed, result.getErrorMessage()};

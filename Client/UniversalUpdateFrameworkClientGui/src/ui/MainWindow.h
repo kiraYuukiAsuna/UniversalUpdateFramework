@@ -4,7 +4,7 @@
 #include "src/framework/Definition/AppSpecification.hpp"
 #include "UpdateCore/UpdateConfig.hpp"
 #include "Network/ApiRequest.hpp"
-#include "UpdateCore/AppVersion.hpp"
+#include <AppVersion.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -26,7 +26,7 @@ private:
     UpdateConfig m_UpdateConfig;
     AppSpecification m_AppSpecification;
     ApiRequest* m_ApiRequest;
-    AppVersion* m_ServerCurrentAppVersion;
+    AppVersionInfo* m_ServerCurrentAppVersion;
 
     void refresh();
 

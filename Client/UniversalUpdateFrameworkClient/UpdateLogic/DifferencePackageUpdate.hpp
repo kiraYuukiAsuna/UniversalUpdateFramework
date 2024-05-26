@@ -5,9 +5,9 @@
 #include <utility>
 #include "Network/ApiRequest.hpp"
 #include "util.hpp"
-#include "UpdateCore/AppVersion.hpp"
-#include "UpdateCore/AppManifest.hpp"
-#include "UpdateCore/DifferencePackageManifest.hpp"
+#include <AppVersion.hpp>
+#include <AppManifest.hpp>
+#include <DifferencePackageManifest.hpp>
 #include "VerifyAndRePatch.hpp"
 
 class DifferencePackageUpdate {
@@ -26,21 +26,20 @@ public:
         if (!result1.getStatus()) {
             return result1;
         }
-        auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
+        AppVersionInfo appVersion = nlohmann::json::parse(appVersionContent);
 
         auto [result2, appManifestContent] = m_ApiRequest.GetAppManifest(m_NewVersion);
         if (!result2.getStatus()) {
             return result2;
         }
-        auto appManifest = AppManifest(nlohmann::json::parse(appManifestContent));
+        AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
 
         auto [result3, appDifferencePackageManifestContent] = m_ApiRequest.GetAppDifferencePackageManifest(
             m_NewVersion);
         if (!result3.getStatus()) {
             return result3;
         }
-        auto appDifferencePackageManifest = DifferencePackageManifest(
-            nlohmann::json::parse(appDifferencePackageManifestContent));
+        DifferencePackageManifestInfo appDifferencePackageManifest = nlohmann::json::parse(appDifferencePackageManifestContent);
 
         std::filesystem::path downloadRootPath = m_DownloadPath + "/" + m_AppPath + "/" + m_AppName;
         if (std::filesystem::exists(downloadRootPath)) {
@@ -49,38 +48,32 @@ public:
         std::filesystem::create_directories(downloadRootPath);
 
         std::filesystem::path appVersionPath =
-                downloadRootPath / ("appversion_" + appVersion.getVersion().getVersionString() + ".json");
+                downloadRootPath / ("appversion_" + appVersion.AppVersion + ".json");
         std::filesystem::path appManifestPath =
-                downloadRootPath / ("appmanifest_" + appManifest.getAppVersion().getVersion().getVersionString() +
-                                    ".json");
+                downloadRootPath / ("appmanifest_" + appManifest.AppVersion + ".json");
         std::filesystem::path appDifferencePackageManifestPath =
                 downloadRootPath /
-                ("appdifferencepackagemanifest_" + appDifferencePackageManifest.getOldVersion().getVersionString() +
-                 "_to_" + appDifferencePackageManifest.getNewAppVersion().getVersion().getVersionString() +
-                 ".json");
+                ("appdifferencepackagemanifest_" + appDifferencePackageManifest.AppBeforeVersion +
+                 "_to_" + appDifferencePackageManifest.AppCurrentVersion + ".json");
 
         util::saveToFile(appVersionContent, appVersionPath);
         util::saveToFile(appManifestContent, appManifestPath);
         util::saveToFile(appDifferencePackageManifestContent, appDifferencePackageManifestPath);
 
         std::filesystem::path differencePackageFile = downloadRootPath / ("differencepackage_" +
-                                                                          appDifferencePackageManifest.getOldVersion().
-                                                                          getVersionString() +
-                                                                          "_to_" +
-                                                                          appDifferencePackageManifest.
-                                                                          getNewAppVersion().getVersion().
-                                                                          getVersionString());
+                                                                          appDifferencePackageManifest.AppBeforeVersion + "_to_" +
+                                                                          appDifferencePackageManifest.AppCurrentVersion);
         m_ApiRequest.DownloadDifferencePackage(m_NewVersion, differencePackageFile.string());
 
         auto uncompresssedPath = downloadRootPath /
-                                 ("differencepackage_" + appVersion.getVersion().getVersionString() + "_uncompressed");
+                                 ("differencepackage_" + appVersion.AppVersion + "_uncompressed");
         std::string shellCommand = std::format(R"({} "" "{}" "{}")", hpatchzExecuable, differencePackageFile.string(),
                                                uncompresssedPath.string());
         std::cout << shellCommand << "\n";
         system(shellCommand.c_str());
 
 
-        for (auto&file: appDifferencePackageManifest.getDiffDeletedFiles()) {
+        for (auto&file: appDifferencePackageManifest.diff_deletedfiles) {
             std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
             std::error_code ec;
@@ -93,7 +86,7 @@ public:
             }
         }
 
-        for (auto&file: appDifferencePackageManifest.getDiffUpdateFiles()) {
+        for (auto&file: appDifferencePackageManifest.diff_updatefiles) {
             std::cout << "Update File:" << file << "\n";
             std::filesystem::path localFilePath = m_AppPath + "/" + file;
             auto diffFilePath = uncompresssedPath / file;
@@ -129,7 +122,7 @@ public:
             }
         }
 
-        for (auto&file: appDifferencePackageManifest.getDiffNewFiles()) {
+        for (auto&file: appDifferencePackageManifest.diff_newfiles) {
             std::cout << "Add New File:" << file << "\n";
             std::filesystem::path localFilePath = m_AppPath + "/" + file;
             auto diffFilePath = uncompresssedPath / file;

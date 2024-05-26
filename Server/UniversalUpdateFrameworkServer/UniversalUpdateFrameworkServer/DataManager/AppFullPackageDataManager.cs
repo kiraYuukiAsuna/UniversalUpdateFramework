@@ -47,9 +47,9 @@ public class AppFullPackageDataManager : IDataManager
     {
         var jObject = GetCurrentData(appname, channel, platform);
 
-        var filename = jObject["filename"];
-        var md5 = jObject["md5"];
-        var version = jObject["appversion"];
+        var filename = jObject["FileName"];
+        var md5 = jObject["Md5"];
+        var version = jObject["AppVersion"];
 
         DownloadFileInfo info;
         info.filePath = Path.Combine(getAppFolderPath(appname), channel, platform, version.ToString(),
@@ -64,9 +64,9 @@ public class AppFullPackageDataManager : IDataManager
     {
         var jObject = GetData(appname, appversion, channel, platform);
 
-        var filename = jObject["filename"];
-        var md5 = jObject["md5"];
-        var version = jObject["appversion"];
+        var filename = jObject["FileName"];
+        var md5 = jObject["Md5"];
+        var version = jObject["AppVersion"];
 
         DownloadFileInfo info;
         info.filePath = Path.Combine(getAppFolderPath(appname), channel, platform, appversion, filename.ToString());
@@ -85,11 +85,11 @@ public class AppFullPackageDataManager : IDataManager
 
         string relativePath = "";
 
-        foreach (var fileInfo in manifest["manifest"])
+        foreach (var fileInfo in manifest["Manifests"])
         {
-            if (fileInfo["md5"].ToString() == md5)
+            if (fileInfo["Md5"].ToString() == md5)
             {
-                relativePath = fileInfo["filepath"].ToString();
+                relativePath = fileInfo["FilePath"].ToString();
             }
         }
 

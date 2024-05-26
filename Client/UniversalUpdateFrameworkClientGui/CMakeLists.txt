@@ -21,6 +21,7 @@ include_directories(
         ../../Common/util
         ../../Common/md5
         ../UniversalUpdateFrameworkClient
+        ../../Generator/UniversalUpdateFrameworkGenerator/src
 )
 
 link_directories(

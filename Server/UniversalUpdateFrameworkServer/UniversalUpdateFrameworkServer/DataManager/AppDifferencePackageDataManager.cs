@@ -48,9 +48,9 @@ public class AppDifferencePackageDataManager : IDataManager
     {
         var jObject = GetCurrentData(appname, channel, platform);
 
-        var filename = jObject["filename"];
-        var md5 = jObject["md5"];
-        var version = jObject["appversion"];
+        var filename = jObject["FileName"];
+        var md5 = jObject["Md5"];
+        var version = jObject["AppCurrentVersion"];
 
         DifferencePackageFileInfo info;
         info.filePath = Path.Combine(getAppFolderPath(appname), channel, platform, version.ToString(),
@@ -66,9 +66,9 @@ public class AppDifferencePackageDataManager : IDataManager
     {
         var jObject = GetData(appname, appversion, channel, platform);
 
-        var filename = jObject["filename"];
-        var md5 = jObject["md5"];
-        var version = jObject["appversion"];
+        var filename = jObject["FileName"];
+        var md5 = jObject["Md5"];
+        var version = jObject["AppCurrentVersion"];
 
         DifferencePackageFileInfo info;
         info.filePath = Path.Combine(getAppFolderPath(appname), channel, platform, appversion, filename.ToString());

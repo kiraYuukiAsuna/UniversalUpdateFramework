@@ -45,8 +45,8 @@ inline int handleArgument(int argc, char* argv[]) {
                 }
 
                 try {
-                    auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
-                    updateToNewVersion = appVersion.getVersion().getVersionString();
+                    AppVersionInfo appVersion = nlohmann::json::parse(appVersionContent);
+                    updateToNewVersion = appVersion.AppVersion;
                 }
                 catch (std::exception&e) {
                     std::cout << "Decode version info failed! Please check if the version given exist in the server!\n";

@@ -64,13 +64,13 @@ MainWindow::MainWindow(QWidget *parent) :
                 return;
             }
 
-            PackageBuildInfo packageBuildInfo;
+            UpdatePackageBuildInfo packageBuildInfo;
             packageBuildInfo.PackageMode = "FullPackage";
-            packageBuildInfo.newPath = ui->NewVersionPath->text().toStdString();
-            packageBuildInfo.appname = ui->AppName->text().toStdString();
-            packageBuildInfo.channel = ui->Channel->text().toStdString();
-            packageBuildInfo.platform = ui->Platform->text().toStdString();
-            packageBuildInfo.appversion = ui->AppVersion->text().toStdString();
+            packageBuildInfo.NewVersionPath = ui->NewVersionPath->text().toStdString();
+            packageBuildInfo.AppName = ui->AppName->text().toStdString();
+            packageBuildInfo.Channel = ui->Channel->text().toStdString();
+            packageBuildInfo.Platform = ui->Platform->text().toStdString();
+            packageBuildInfo.AppCurrentVersion = ui->AppVersion->text().toStdString();
 
 //            packageBuildInfo.PackageMode = "DifferencePackage";
 //            packageBuildInfo.newPath = R"(D:\WorkSpace\UnrealEngine\1.1.0)";
@@ -125,15 +125,15 @@ MainWindow::MainWindow(QWidget *parent) :
                 return;
             }
 
-            PackageBuildInfo packageBuildInfo;
+            UpdatePackageBuildInfo packageBuildInfo;
             packageBuildInfo.PackageMode = "DifferencePackage";
-            packageBuildInfo.oldPath = ui->OldVersionPath->text().toStdString();
-            packageBuildInfo.newPath = ui->NewVersionPath->text().toStdString();
-            packageBuildInfo.appname = ui->AppName->text().toStdString();
-            packageBuildInfo.channel = ui->Channel->text().toStdString();
-            packageBuildInfo.platform = ui->Platform->text().toStdString();
-            packageBuildInfo.appversion = ui->AppVersion->text().toStdString();
-            packageBuildInfo.appbeforeversion = ui->OldAppVersion->text().toStdString();
+            packageBuildInfo.OldVersionPath = ui->OldVersionPath->text().toStdString();
+            packageBuildInfo.NewVersionPath = ui->NewVersionPath->text().toStdString();
+            packageBuildInfo.AppName = ui->AppName->text().toStdString();
+            packageBuildInfo.Channel = ui->Channel->text().toStdString();
+            packageBuildInfo.Platform = ui->Platform->text().toStdString();
+            packageBuildInfo.AppCurrentVersion = ui->AppVersion->text().toStdString();
+            packageBuildInfo.AppBeforeVersion = ui->OldAppVersion->text().toStdString();
 
 //            packageBuildInfo.PackageMode = "DifferencePackage";
 //            packageBuildInfo.oldPath = R"(C:/Users/KiraY/Desktop/UniversalUpdateFramework/Generator/UniversalUpdateFrameworkGeneratorGui/cmake-build-debug/TestApplication/Release/Win/1.0.0/fullpackage)";

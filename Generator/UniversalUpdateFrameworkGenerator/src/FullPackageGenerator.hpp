@@ -7,8 +7,13 @@
 #include "nlohmann/json.hpp"
 #include "md5.h"
 #include <format>
+#include "FilePermission.hpp"
+#include "src/AppVersion.hpp"
+#include "src/UpdatePackageBuild.hpp"
+#include "src/AppManifest.hpp"
+#include "src/FullPackageManifest.hpp"
 
-inline bool generateFullPackageAppVersionFile(std::filesystem::path appversionFolder, PackageBuildInfo info) {
+inline bool generateFullPackageAppVersionFile(std::filesystem::path appversionFolder, UpdatePackageBuildInfo info) {
     std::filesystem::path appverionFilePath = appversionFolder / "appversion.json";
     std::ofstream appversionFileStream;
     appversionFileStream.open(appverionFilePath);
@@ -17,18 +22,20 @@ inline bool generateFullPackageAppVersionFile(std::filesystem::path appversionFo
         return false;
     }
 
-    nlohmann::json appversionJson;
-    appversionJson["appname"] = info.appname;
-    appversionJson["appversion"] = info.appversion;
+    AppVersionInfo appVersionInfo;
+    appVersionInfo.AppName = info.AppName;
+    appVersionInfo.AppVersion = info.AppCurrentVersion;
 
-    appversionFileStream << appversionJson;
+    nlohmann::json appVersionInfoJson = appVersionInfo;
+
+    appversionFileStream << appVersionInfoJson.dump(4);
     appversionFileStream.close();
 
     return true;
 }
 
 
-inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionFolder, PackageBuildInfo info) {
+inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionFolder, UpdatePackageBuildInfo info) {
     std::filesystem::path appmanifestFilePath = appversionFolder / "appmanifest.json";
     std::ofstream appmanifestFileStream;
     appmanifestFileStream.open(appmanifestFilePath);
@@ -37,34 +44,38 @@ inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionF
         return false;
     }
 
-    nlohmann::json appmanifestJson;
-    appmanifestJson["appname"] = info.appname;
-    appmanifestJson["appversion"] = info.appversion;
-    appmanifestJson["manifest"];
+    AppManifestInfo appMainifestInfo;
+    appMainifestInfo.AppName = info.AppName;
+    appMainifestInfo.AppVersion = info.AppCurrentVersion;
 
-    std::filesystem::path newPath(info.newPath);
+    std::filesystem::path newPath(info.NewVersionPath);
     for (auto&directoryEntry: std::filesystem::recursive_directory_iterator(newPath)) {
         if (!directoryEntry.is_directory()) {
-            auto relativePath = std::filesystem::relative(directoryEntry.path(), std::filesystem::path(info.newPath));
-            nlohmann::json fileInfo;
-            fileInfo["filepath"] = relativePath.string();
-            fileInfo["filename"] = relativePath.filename();
-            fileInfo["md5"] = calcFileMd5(directoryEntry.path().string());
+            auto relativePath = std::filesystem::relative(directoryEntry.path(), std::filesystem::path(info.NewVersionPath));
+            FileManifestInfo manifest;
+            manifest.FileName = relativePath.filename().string();
+            manifest.FilePath = relativePath.string();
+            manifest.Md5 = calcFileMd5(directoryEntry.path().string());
 
-            appmanifestJson["manifest"].push_back(fileInfo);
+            FilePermission filePermission(directoryEntry.path());
+            manifest.Permission = filePermission.ReadPermission();
+
+            appMainifestInfo.Manifests.push_back(manifest);
         }
     }
 
-    appmanifestFileStream << appmanifestJson;
+    nlohmann::json appMainifestInfoJson = appMainifestInfo;
+
+    appmanifestFileStream << appMainifestInfoJson.dump(4);
     appmanifestFileStream.close();
 
     return true;
 }
 
-inline bool generateFullPackageManifestFile(std::filesystem::path appversionFolder, PackageBuildInfo info) {
+inline bool generateFullPackageManifestFile(std::filesystem::path appversionFolder, UpdatePackageBuildInfo info) {
     std::filesystem::path fullPackageFile = appversionFolder / "appfullpackage";
     std::cout << fullPackageFile.string() << "\n";
-    std::string shellCommand = std::format(R"({} -c-zlib "" "{}" "{}")", hdiffzExecuable, info.newPath,
+    std::string shellCommand = std::format(R"({} -c-zlib "" "{}" "{}")", hdiffzExecuable, info.NewVersionPath,
                                            fullPackageFile.string());
     std::cout << shellCommand << "\n";
 
@@ -82,18 +93,21 @@ inline bool generateFullPackageManifestFile(std::filesystem::path appversionFold
         return false;
     }
 
-    nlohmann::json appfullpackagemanifestJson;
-    appfullpackagemanifestJson["appname"] = info.appname;
-    appfullpackagemanifestJson["appversion"] = info.appversion;
-    appfullpackagemanifestJson["filename"] = "appfullpackage";
-    appfullpackagemanifestJson["md5"] = calcFileMd5(fullPackageFile.string());
+    FullPackageManifestInfo fullPackageManifestInfo;
 
-    appfullpackagemanifestFileStream << appfullpackagemanifestJson;
+    fullPackageManifestInfo.AppName = info.AppName;
+    fullPackageManifestInfo.AppVersion = info.AppCurrentVersion;
+    fullPackageManifestInfo.FileName = "appfullpackage";
+    fullPackageManifestInfo.Md5 = calcFileMd5(fullPackageFile.string());
+
+    nlohmann::json appfullpackagemanifestJson = fullPackageManifestInfo;
+
+    appfullpackagemanifestFileStream << appfullpackagemanifestJson.dump(4);
     appfullpackagemanifestFileStream.close();
 
     std::filesystem::path fullpackageFolderPath = appversionFolder / "fullpackage";
 
-    std::filesystem::copy(info.newPath, fullpackageFolderPath, std::filesystem::copy_options::recursive);
+    std::filesystem::copy(info.NewVersionPath, fullpackageFolderPath, std::filesystem::copy_options::recursive);
 
     return true;
 }

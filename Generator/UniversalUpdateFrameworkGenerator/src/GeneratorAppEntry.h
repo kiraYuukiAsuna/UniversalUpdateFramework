@@ -6,23 +6,23 @@
 #include "FullPackageGenerator.hpp"
 #include "DifferencePackageGenerator.hpp"
 
-inline int generateFullPackage(PackageBuildInfo &packageBuildInfo) {
-    if (!std::filesystem::exists(packageBuildInfo.newPath)) {
-        std::cout << "newPath:" << packageBuildInfo.newPath << " not exists.\n";
+inline int generateFullPackage(UpdatePackageBuildInfo &packageBuildInfo) {
+    if (!std::filesystem::exists(packageBuildInfo.NewVersionPath)) {
+        std::cout << "NewVersionPath:" << packageBuildInfo.NewVersionPath << " not exists.\n";
         return -1;
     }
 
-    std::filesystem::path appdataFolder(packageBuildInfo.appname);
+    std::filesystem::path appdataFolder(packageBuildInfo.AppName);
     if (!std::filesystem::exists(appdataFolder)) {
         std::filesystem::create_directories(appdataFolder);
     }
 
-    std::filesystem::path appChannelPlatformFolder = appdataFolder / packageBuildInfo.channel / packageBuildInfo.platform;
+    std::filesystem::path appChannelPlatformFolder = appdataFolder / packageBuildInfo.Channel / packageBuildInfo.Platform;
     if (!std::filesystem::exists(appChannelPlatformFolder)) {
         std::filesystem::create_directories(appChannelPlatformFolder);
     }
 
-    std::filesystem::path appversionFolder = appChannelPlatformFolder / packageBuildInfo.appversion;
+    std::filesystem::path appversionFolder = appChannelPlatformFolder / packageBuildInfo.AppCurrentVersion;
     if (std::filesystem::exists(appversionFolder)) {
         std::filesystem::remove_all(appversionFolder);
     }
@@ -47,28 +47,28 @@ inline int generateFullPackage(PackageBuildInfo &packageBuildInfo) {
     return 0;
 }
 
-inline int generateDifferencePackage(PackageBuildInfo &packageBuildInfo) {
-    if (!std::filesystem::exists(packageBuildInfo.newPath)) {
-        std::cout << "newPath:" << packageBuildInfo.newPath << " not exists.\n";
+inline int generateDifferencePackage(UpdatePackageBuildInfo &packageBuildInfo) {
+    if (!std::filesystem::exists(packageBuildInfo.NewVersionPath)) {
+        std::cout << "NewVersionPath:" << packageBuildInfo.NewVersionPath << " not exists.\n";
         return -1;
     }
 
-    if (!std::filesystem::exists(packageBuildInfo.oldPath)) {
-        std::cout << "oldPath:" << packageBuildInfo.oldPath << " not exists.\n";
+    if (!std::filesystem::exists(packageBuildInfo.OldVersionPath)) {
+        std::cout << "OldVersionPath:" << packageBuildInfo.OldVersionPath << " not exists.\n";
         return -1;
     }
 
-    std::filesystem::path appdataFolder(packageBuildInfo.appname);
+    std::filesystem::path appdataFolder(packageBuildInfo.AppName);
     if (!std::filesystem::exists(appdataFolder)) {
         std::filesystem::create_directories(appdataFolder);
     }
 
-    std::filesystem::path appChannelPlatformFolder = appdataFolder / packageBuildInfo.channel / packageBuildInfo.platform;
+    std::filesystem::path appChannelPlatformFolder = appdataFolder / packageBuildInfo.Channel / packageBuildInfo.Platform;
     if (!std::filesystem::exists(appChannelPlatformFolder)) {
         std::filesystem::create_directories(appChannelPlatformFolder);
     }
 
-    std::filesystem::path appversionFolder = appChannelPlatformFolder / packageBuildInfo.appversion;
+    std::filesystem::path appversionFolder = appChannelPlatformFolder / packageBuildInfo.AppCurrentVersion;
     if (!std::filesystem::exists(appversionFolder)) {
         std::filesystem::create_directories(appversionFolder);
     }

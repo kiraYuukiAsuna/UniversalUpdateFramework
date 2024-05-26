@@ -5,9 +5,10 @@
 #include <utility>
 #include "Network/ApiRequest.hpp"
 #include "util.hpp"
-#include "UpdateCore/AppVersion.hpp"
-#include "UpdateCore/AppManifest.hpp"
-#include "UpdateCore/FullPackageManifest.hpp"
+#include <AppVersion.hpp>
+#include <AppManifest.hpp>
+#include <FullPackageManifest.hpp>
+#include <DifferencePackageManifest.hpp>
 #include "VerifyAndRePatch.hpp"
 
 class FullPackageUpdate {
@@ -27,7 +28,7 @@ public:
         if (!result1.getStatus()) {
             return result1;
         }
-        auto appVersion = AppVersion(nlohmann::json::parse(appVersionContent));
+        AppVersionInfo appVersion = nlohmann::json::parse(appVersionContent);
 
         auto [result2, appManifestContent] = m_NewVersion.empty()
                                                  ? m_ApiRequest.GetCurrentAppManifest()
@@ -35,7 +36,7 @@ public:
         if (!result2.getStatus()) {
             return result2;
         }
-        auto appManifest = AppManifest(nlohmann::json::parse(appManifestContent));
+        AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
 
         auto [result3, appFullPackageManifestContent] = m_NewVersion.empty()
                                                             ? m_ApiRequest.GetCurrentAppFullPackageManifest()
@@ -43,7 +44,7 @@ public:
         if (!result3.getStatus()) {
             return result3;
         }
-        auto appFullPackageManifest = FullPackageManifest(nlohmann::json::parse(appFullPackageManifestContent));
+        FullPackageManifestInfo appFullPackageManifest = nlohmann::json::parse(appFullPackageManifestContent);
 
         std::filesystem::path downloadRootPath = m_DownloadPath + "/" + m_AppPath + "/" + m_AppName;
         if (std::filesystem::exists(downloadRootPath)) {
@@ -52,26 +53,25 @@ public:
         std::filesystem::create_directories(downloadRootPath);
 
         std::filesystem::path appVersionPath =
-                downloadRootPath / ("appversion_" + appVersion.getVersion().getVersionString() + ".json");
+                downloadRootPath / ("appversion_" + appVersion.AppVersion + ".json");
         std::filesystem::path appManifestPath =
-                downloadRootPath / ("appmanifest_" + appManifest.getAppVersion().getVersion().getVersionString() +
+                downloadRootPath / ("appmanifest_" + appManifest.AppVersion +
                                     ".json");
         std::filesystem::path appFullPackageManifestPath =
-                downloadRootPath / ("appfullpackagemanifest_" + appFullPackageManifest.getAppVersion().getVersion().
-                                    getVersionString() + ".json");
+                downloadRootPath / ("appfullpackagemanifest_" + appFullPackageManifest.AppVersion + ".json");
 
         util::saveToFile(appVersionContent, appVersionPath);
         util::saveToFile(appManifestContent, appManifestPath);
         util::saveToFile(appFullPackageManifestContent, appFullPackageManifestPath);
 
         std::filesystem::path fullPackageFile =
-                downloadRootPath / ("fullpackage_" + appVersion.getVersion().getVersionString());
+                downloadRootPath / ("fullpackage_" + appVersion.AppVersion);
         m_NewVersion.empty()
             ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
             : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string());
 
         auto uncompresssedPath =
-                downloadRootPath / ("fullpackage_" + appVersion.getVersion().getVersionString() + "_uncompressed");
+                downloadRootPath / ("fullpackage_" + appVersion.AppVersion + "_uncompressed");
         std::string shellCommand = std::format(R"({} "" "{}" "{}")", hpatchzExecuable, fullPackageFile.string(),
                                                uncompresssedPath.string());
         std::cout << shellCommand << "\n";

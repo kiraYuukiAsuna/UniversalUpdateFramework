@@ -1,7 +1,6 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "src/framework/Definition/ImageDefination.hpp"
-#include "UpdateCore/AppVersion.hpp"
 #include <QMessageBox>
 #include "UpdateLogic/UpdateClientAppEntry.hpp"
 #include <QProcess>
@@ -69,7 +68,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
                                  handleUpdateMode,
                                  std::ref(updateMode),
                                  std::ref(updateConfigIo),
-                                 m_ServerCurrentAppVersion->getVersion().getVersionString());
+                                 m_ServerCurrentAppVersion->AppVersion);
 
         ui->UpdateProgressBar->setValue(10);
 
@@ -119,11 +118,11 @@ void MainWindow::refresh() {
     m_ApiRequest = new ApiRequest(m_UpdateConfig.host, m_UpdateConfig.appName, m_UpdateConfig.channel,
                                   m_UpdateConfig.platform);
     if (auto [result, appVersionContent] = m_ApiRequest->GetCurrentAppVersion(); result.getStatus()) {
-        m_ServerCurrentAppVersion = new AppVersion(nlohmann::json::parse(appVersionContent));
-        auto serverCurrentVersion = m_ServerCurrentAppVersion->getVersion();
+        m_ServerCurrentAppVersion = new AppVersionInfo(nlohmann::json::parse(appVersionContent));
+        auto serverCurrentVersion = Version{m_ServerCurrentAppVersion->AppVersion};
 
         ui->ServerCurrentVersion->setText(
-            QString::fromStdString(m_ServerCurrentAppVersion->getVersion().getVersionString()));
+            QString::fromStdString(m_ServerCurrentAppVersion->AppVersion));
 
         if (localCurrentVersion < serverCurrentVersion) {
             ui->UpdateStatus->setText("New Version Available!");
