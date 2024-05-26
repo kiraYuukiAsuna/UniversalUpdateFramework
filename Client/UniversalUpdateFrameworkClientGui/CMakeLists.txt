@@ -66,6 +66,11 @@ target_link_libraries(${PROJECT_NAME}
         Qt::Widgets
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS
+        "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
+
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(DEBUG_SUFFIX)
     if (MSVC AND CMAKE_BUILD_TYPE MATCHES "Debug")
