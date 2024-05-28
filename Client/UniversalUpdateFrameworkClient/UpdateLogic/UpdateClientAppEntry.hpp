@@ -6,10 +6,9 @@
 #include "UpdateLogic/DifferencePackageUpdate.hpp"
 #include "UpdateLogic/MultiVersionDifferencePackageUpdate.hpp"
 #include "UpdateLogic/DifferenceUpdate.hpp"
-#include "cxxopts.hpp"
 #include "UpdateCore/UpdateConfig.hpp"
-#include "Network/ApiRequest.hpp"
 #include <Defination.hpp>
+#include "UpdateSelf.hpp"
 
 inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::string updateToNewVersion) {
     switch (mode) {

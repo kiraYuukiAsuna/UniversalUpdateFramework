@@ -13,6 +13,7 @@ public:
     std::string Platform;
     std::string AppCurrentVersion;
     std::string AppBeforeVersion;
+    std::string UpdateReadMe;
 
     friend void to_json(nlohmann::json&nlohmann_json_j, const UpdatePackageBuildInfo&nlohmann_json_t) {
         nlohmann_json_j["PackageMode"] = nlohmann_json_t.PackageMode;
@@ -23,6 +24,7 @@ public:
         nlohmann_json_j["Platform"] = nlohmann_json_t.Platform;
         nlohmann_json_j["AppCurrentVersion"] = nlohmann_json_t.AppCurrentVersion;
         nlohmann_json_j["AppBeforeVersion"] = nlohmann_json_t.AppBeforeVersion;
+        nlohmann_json_j["UpdateReadMe"] = nlohmann_json_t.UpdateReadMe;
     }
 
     friend void from_json(const nlohmann::json&nlohmann_json_j, UpdatePackageBuildInfo&nlohmann_json_t) {
@@ -39,5 +41,7 @@ public:
                                                                   nlohmann_json_default_obj.AppCurrentVersion);
         nlohmann_json_t.AppBeforeVersion = nlohmann_json_j.value("AppBeforeVersion",
                                                                  nlohmann_json_default_obj.AppBeforeVersion);
+        nlohmann_json_t.UpdateReadMe = nlohmann_json_j.value("UpdateReadMe",
+                                                         nlohmann_json_default_obj.UpdateReadMe);
     }
 };

@@ -32,12 +32,14 @@ public:
     std::string AppVersion;
     std::string FileName;
     std::vector<FileManifestInfo> Manifests;
+    std::string UpdateReadMe;
 
     friend void to_json(nlohmann::json&nlohmann_json_j, const AppManifestInfo&nlohmann_json_t) {
         nlohmann_json_j["AppName"] = nlohmann_json_t.AppName;
         nlohmann_json_j["AppVersion"] = nlohmann_json_t.AppVersion;
         nlohmann_json_j["FileName"] = nlohmann_json_t.FileName;
         nlohmann_json_j["Manifests"] = nlohmann_json_t.Manifests;
+        nlohmann_json_j["UpdateReadMe"] = nlohmann_json_t.UpdateReadMe;
     }
 
     friend void from_json(const nlohmann::json&nlohmann_json_j, AppManifestInfo&nlohmann_json_t) {
@@ -46,5 +48,6 @@ public:
         nlohmann_json_t.AppVersion = nlohmann_json_j.value("AppVersion", nlohmann_json_default_obj.AppVersion);
         nlohmann_json_t.FileName = nlohmann_json_j.value("FileName", nlohmann_json_default_obj.FileName);
         nlohmann_json_t.Manifests = nlohmann_json_j.value("Manifests", nlohmann_json_default_obj.Manifests);
+        nlohmann_json_t.UpdateReadMe = nlohmann_json_j.value("UpdateReadMe", nlohmann_json_default_obj.UpdateReadMe);
     }
 };

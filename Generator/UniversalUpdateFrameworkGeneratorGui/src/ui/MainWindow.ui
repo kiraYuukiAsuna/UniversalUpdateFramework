@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>350</height>
+    <height>366</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
         <item row="0" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>Generation Mode:</string>
+           <string>[F/D]Generation Mode:</string>
           </property>
          </widget>
         </item>
@@ -32,7 +32,7 @@
         <item row="1" column="0">
          <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Old Version Path:</string>
+           <string>[D]Old Version Path:</string>
           </property>
          </widget>
         </item>
@@ -53,7 +53,7 @@
         <item row="2" column="0">
          <widget class="QLabel" name="label_3">
           <property name="text">
-           <string>New Version Path:</string>
+           <string>[F/D]New Version Path:</string>
           </property>
          </widget>
         </item>
@@ -74,7 +74,7 @@
         <item row="3" column="0">
          <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>App Name:</string>
+           <string>[F/D]App Name:</string>
           </property>
          </widget>
         </item>
@@ -84,7 +84,7 @@
         <item row="6" column="0">
          <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>App Version:</string>
+           <string>[F/D]App Version:</string>
           </property>
          </widget>
         </item>
@@ -94,7 +94,7 @@
         <item row="7" column="0">
          <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Old App Version:</string>
+           <string>[D]Old App Version:</string>
           </property>
          </widget>
         </item>
@@ -148,7 +148,7 @@
         <item row="4" column="0">
          <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>Channel:</string>
+           <string>[F/D]Channel:</string>
           </property>
          </widget>
         </item>
@@ -158,12 +158,22 @@
         <item row="5" column="0">
          <widget class="QLabel" name="label_9">
           <property name="text">
-           <string>Platform:</string>
+           <string>[F/D]Platform:</string>
           </property>
          </widget>
         </item>
         <item row="5" column="1">
          <widget class="QLineEdit" name="Platform"/>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>[F]UpdateReadMe:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QTextEdit" name="textEdit"/>
         </item>
        </layout>
       </item>
@@ -177,7 +187,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>

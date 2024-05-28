@@ -131,17 +131,7 @@
           <item row="3" column="0">
            <widget class="QLabel" name="label_12">
             <property name="text">
-             <string>Update Log:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="UpdateLog">
-            <property name="text">
-             <string/>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
+             <string>New Update ReadMe:</string>
             </property>
            </widget>
           </item>
@@ -160,6 +150,9 @@
              <string>%p%</string>
             </property>
            </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QTextEdit" name="textEdit"/>
           </item>
          </layout>
         </item>
@@ -215,7 +208,7 @@
      <x>0</x>
      <y>0</y>
      <width>512</width>
-     <height>22</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>

@@ -71,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
             packageBuildInfo.Channel = ui->Channel->text().toStdString();
             packageBuildInfo.Platform = ui->Platform->text().toStdString();
             packageBuildInfo.AppCurrentVersion = ui->AppVersion->text().toStdString();
+            packageBuildInfo.UpdateReadMe = ui->textEdit->toMarkdown().toStdString();
 
 //            packageBuildInfo.PackageMode = "DifferencePackage";
 //            packageBuildInfo.newPath = R"(D:\WorkSpace\UnrealEngine\1.1.0)";

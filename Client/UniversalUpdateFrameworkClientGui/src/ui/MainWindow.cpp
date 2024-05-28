@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->UpdateBtn, &QPushButton::clicked, this, [&]() {
         refresh();
 
-        if (m_ServerCurrentAppVersion == nullptr) {
+        if (m_ServerCurrentAppVersion.AppVersion.empty()) {
             QMessageBox::critical(this, "Error", "Cannot connect to update server!");
             return;
         }
@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
                                  handleUpdateMode,
                                  std::ref(updateMode),
                                  std::ref(updateConfigIo),
-                                 m_ServerCurrentAppVersion->AppVersion);
+                                 m_ServerCurrentAppVersion.AppVersion);
 
         ui->UpdateProgressBar->setValue(10);
 
@@ -106,7 +106,7 @@ void MainWindow::refresh() {
     ui->AppSelect->clear();
     ui->AppSelect->addItem(QString::fromStdString(m_UpdateConfig.appName));
 
-    if (m_UpdateConfig.localCurrentVersion == "x.x.x") {
+    if (m_UpdateConfig.localCurrentVersion == "x.x.x" || m_UpdateConfig.localCurrentVersion.empty()) {
         m_UpdateConfig.localCurrentVersion = "0.0.0";
         updateConfigIo.setConfig(m_UpdateConfig);
         updateConfigIo.writeToFile();
@@ -115,20 +115,23 @@ void MainWindow::refresh() {
 
     ui->LocalCurrentVersion->setText(QString::fromStdString(localCurrentVersion.getVersionString()));
 
-    m_ApiRequest = new ApiRequest(m_UpdateConfig.host, m_UpdateConfig.appName, m_UpdateConfig.channel,
-                                  m_UpdateConfig.platform);
     if (auto [result, appVersionContent] = m_ApiRequest->GetCurrentAppVersion(); result.getStatus()) {
-        m_ServerCurrentAppVersion = new AppVersionInfo(nlohmann::json::parse(appVersionContent));
-        auto serverCurrentVersion = Version{m_ServerCurrentAppVersion->AppVersion};
+        m_ServerCurrentAppVersion = AppVersionInfo(nlohmann::json::parse(appVersionContent));
+        auto serverCurrentVersion = Version{m_ServerCurrentAppVersion.AppVersion};
 
         ui->ServerCurrentVersion->setText(
-            QString::fromStdString(m_ServerCurrentAppVersion->AppVersion));
+            QString::fromStdString(m_ServerCurrentAppVersion.AppVersion));
 
         if (localCurrentVersion < serverCurrentVersion) {
             ui->UpdateStatus->setText("New Version Available!");
+            if (auto [result, appManifestContent] = m_ApiRequest->GetCurrentAppManifest(); result.getStatus()) {
+                AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
+                ui->textEdit->setMarkdown(QString::fromStdString(appManifest.UpdateReadMe));
+            }
         }
         else {
             ui->UpdateStatus->setText("No Update Available!");
+            ui->textEdit->setMarkdown(QString::fromStdString("# No Update Available!"));
         }
     }
     else {
@@ -142,4 +145,17 @@ void MainWindow::initialize() {
     ui->UpdateModeSelect->addItem("MultiVersionDifferencePackageUpdate");
     ui->UpdateModeSelect->addItem("DirectDifferenceUpdate");
     ui->UpdateModeSelect->addItem("FullPackageUpdate");
+
+    UpdateConfigIo updateConfigIo(m_AppSpecification.appUpdateConfigFile);
+    updateConfigIo.readFromFile();
+    m_UpdateConfig = updateConfigIo.getConfig();
+
+    if (m_UpdateConfig.localCurrentVersion == "x.x.x" || m_UpdateConfig.localCurrentVersion.empty()) {
+        m_UpdateConfig.localCurrentVersion = "0.0.0";
+        updateConfigIo.setConfig(m_UpdateConfig);
+        updateConfigIo.writeToFile();
+    }
+
+    m_ApiRequest = new ApiRequest(m_UpdateConfig.host, m_UpdateConfig.appName, m_UpdateConfig.channel,
+                                  m_UpdateConfig.platform);
 }

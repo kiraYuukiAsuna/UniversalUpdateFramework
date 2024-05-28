@@ -26,7 +26,7 @@ private:
     UpdateConfig m_UpdateConfig;
     AppSpecification m_AppSpecification;
     ApiRequest* m_ApiRequest;
-    AppVersionInfo* m_ServerCurrentAppVersion;
+    AppVersionInfo m_ServerCurrentAppVersion;
 
     void refresh();
 

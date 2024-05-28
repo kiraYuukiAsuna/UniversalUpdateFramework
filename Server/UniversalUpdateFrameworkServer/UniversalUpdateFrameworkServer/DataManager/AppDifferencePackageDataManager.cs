@@ -9,20 +9,13 @@ public struct DifferencePackageFileInfo
     public string version;
 }
 
-public class AppDifferencePackageDataManager : IDataManager
+public class AppDifferencePackageDataManager(string appDataFolderPath) : IDataManager
 {
-    private Mutex m_Mutex = new Mutex();
-
-    private string m_AppDataFolderPath;
-
-    public AppDifferencePackageDataManager(string appDataFolderPath)
-    {
-        m_AppDataFolderPath = appDataFolderPath;
-    }
+    private Mutex m_Mutex = new();
 
     public string getAppFolderPath(string appname)
     {
-        return Path.Combine(m_AppDataFolderPath, appname);
+        return Path.Combine(appDataFolderPath, appname);
     }
 
     public JObject GetCurrentData(string appname, string channel, string platform)
