@@ -17,6 +17,8 @@ std::wstring Str2Wstr(const std::string& str)
 
 #elif defined __linux__
 
+#elif defined __APPLE__
+
 #endif
 
 void ProcessUtil::TerminateProcessByFilePath(const std::string& filePath)
@@ -40,6 +42,8 @@ void ProcessUtil::TerminateProcessByFilePath(const std::string& filePath)
         }
     }
 #elif defined __linux__
+
+#elif defined __APPLE__
 
 #endif
 }

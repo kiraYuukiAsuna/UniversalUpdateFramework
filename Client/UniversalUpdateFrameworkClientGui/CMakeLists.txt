@@ -53,16 +53,23 @@ set(PROJECT_HEADERS
 
 set(PROJECT_SOURCES
         main.cpp
-
-        ../../Common/md5/md5.cpp
-
         ../../Common/processutil/DeleteFileForce.cpp
-        ../../Common/processutil/Windows/NtdllBase.cpp
-        ../../Common/processutil/Windows/NtdllExtensions.cpp
-        ../../Common/processutil/Windows/FileLocksmith.cpp
-
-        app_win32.rc
+        ../../Common/md5/md5.cpp
 )
+
+if (WIN32)
+    set(ProjectSource
+            ${ProjectSource}
+            app_win32.rc
+            ../../Common/processutil/Windows/NtdllBase.cpp
+            ../../Common/processutil/Windows/NtdllExtensions.cpp
+            ../../Common/processutil/Windows/FileLocksmith.cpp
+    )
+elseif (UNIX)
+
+elseif (APPLE)
+
+endif ()
 
 add_executable(${PROJECT_NAME} ${QRESOURCE} ${PROJECT_HEADERS} ${PROJECT_SOURCES} ${SRC_LIST} ${UpdateCore_SRC_LIST})
 
@@ -72,10 +79,16 @@ target_link_libraries(${PROJECT_NAME}
         Qt::Widgets
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+if (WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS
-        "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS
+            "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
+elseif (UNIX)
+
+elseif (APPLE)
+
+endif ()
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(DEBUG_SUFFIX)
