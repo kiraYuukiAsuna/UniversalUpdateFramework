@@ -7,8 +7,9 @@
 #include <AppVersion.hpp>
 #include <AppManifest.hpp>
 #include "md5.h"
+#include <FilePermission.hpp>
 
-class VerifyAndRePatch {
+class VerifyRePatchSetPermission {
 public:
     static ReturnWrapper
     execute(ApiRequest &api, AppVersionInfo &appVersion, AppManifestInfo &appManifest, const std::string &appPath) {
@@ -21,12 +22,10 @@ public:
             if (!dirEntry.is_directory()) {
                 auto iter = fileRelativrPathSet.find(std::filesystem::relative(dirEntry.path(), appPath).string());
                 if (iter == fileRelativrPathSet.end()) {
-                    std::error_code ec;
-                    std::filesystem::remove(dirEntry.path(), ec);
-                    if (ec) {
+                    if (!ProcessUtil::DeleteFileRecursiveForce(dirEntry.path())) {
 //                        return {false, ErrorCode::DeleteFileFailed,
 //                                std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))};
-                        std::cout << std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed)) << " with "<<ec.message()<< "\n";
+                        std::cout << std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed)) << " FilePath: "<<dirEntry.path()<< "\n";
                     }
                 }
             }
@@ -54,10 +53,8 @@ public:
                 std::cout << "Md5 not equal! Download:" << fileManifest.FilePath << "\n";
                 std::cout << "Download Path " << localFilePath << " ,server md5 = " << fileManifest.Md5<<" ,local md5="<< calcFileMd5(localFilePath)<< "\n";
 
-                std::error_code errorCode;
-                std::filesystem::remove(localFilePath, errorCode);
-                if (errorCode) {
-                    return {false, ErrorCode::DeleteFileFailed, errorCode.message()};
+                if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+                    return {false, ErrorCode::DeleteFileFailed, "DeleteFileFailed! FilePath: " + localFilePath};
                 }
                 auto [result, _] = api.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                    fileManifest.Md5, localFilePath);
@@ -66,6 +63,9 @@ public:
                             std::string(magic_enum::enum_name(ErrorCode::DownloadFileFailed))};
                 }
             }
+
+            FilePermission filePermission(localFilePath);
+            filePermission.WritePermission(fileManifest.Permission);
         }
         return {true};
     }

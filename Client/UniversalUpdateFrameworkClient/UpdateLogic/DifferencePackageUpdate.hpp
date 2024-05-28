@@ -7,8 +7,9 @@
 #include "util.hpp"
 #include <AppVersion.hpp>
 #include <AppManifest.hpp>
+#include <DeleteFileForce.hpp>
 #include <DifferencePackageManifest.hpp>
-#include "VerifyAndRePatch.hpp"
+#include "VerifyRePatchSetPermission.hpp"
 
 class DifferencePackageUpdate {
 public:
@@ -42,9 +43,7 @@ public:
         DifferencePackageManifestInfo appDifferencePackageManifest = nlohmann::json::parse(appDifferencePackageManifestContent);
 
         std::filesystem::path downloadRootPath = m_DownloadPath + "/" + m_AppPath + "/" + m_AppName;
-        if (std::filesystem::exists(downloadRootPath)) {
-            std::filesystem::remove_all(downloadRootPath);
-        }
+        ProcessUtil::DeleteFileRecursiveForce(downloadRootPath);
         std::filesystem::create_directories(downloadRootPath);
 
         std::filesystem::path appVersionPath =
@@ -76,9 +75,7 @@ public:
         for (auto&file: appDifferencePackageManifest.diff_deletedfiles) {
             std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
-            std::error_code ec;
-            std::filesystem::remove(localFilePath, ec);
-            if (ec) {
+            if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
                 return {
                     false, ErrorCode::DeleteFileFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))
@@ -107,8 +104,7 @@ public:
             std::cout << patchShellCommand << "\n";
             system(patchShellCommand.c_str());
 
-            std::filesystem::remove(localFilePath, ec);
-            if (ec) {
+            if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
                 return {
                     false, ErrorCode::DeleteFileFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))
@@ -146,14 +142,12 @@ public:
             }
         }
 
-        auto result = VerifyAndRePatch::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
+        auto result = VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
         if (!result.getStatus()) {
             return result;
         }
 
-        std::error_code ec;
-        std::filesystem::remove_all(m_DownloadPath, ec);
-        if (ec) {
+        if (!ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath)) {
             return {
                 false, ErrorCode::DeleteDownloadDirFailed,
                 std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))

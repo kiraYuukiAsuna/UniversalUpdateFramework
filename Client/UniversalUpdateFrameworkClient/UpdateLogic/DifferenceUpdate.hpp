@@ -5,7 +5,7 @@
 #include <AppVersion.hpp>
 #include <AppManifest.hpp>
 #include "md5.h"
-#include "UpdateLogic/VerifyAndRePatch.hpp"
+#include "UpdateLogic/VerifyRePatchSetPermission.hpp"
 
 class DifferenceUpdate {
 public:
@@ -84,10 +84,8 @@ public:
         for (auto &file: deleted_elements) {
             std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
-            std::error_code ec;
-            std::filesystem::remove(localFilePath, ec);
-            if (ec) {
-                return {false, ErrorCode::DeleteFileFailed, ec.message()};
+            if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+                return {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
             }
         }
 
@@ -101,10 +99,8 @@ public:
                 std::cout << "Download Path " << localFilePath << " ,server md5 = " << serverMd5 << " ,local md5="
                           << localMd5 << "\n";
 
-                std::error_code errorCode;
-                std::filesystem::remove(localFilePath, errorCode);
-                if (errorCode) {
-                    return {false, ErrorCode::DeleteFileFailed, errorCode.message()};
+                if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+                    return {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
                 }
                 auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                             serverMd5, localFilePath);
@@ -136,14 +132,12 @@ public:
 
         std::cout << "Start Verify...\n";
 
-        auto result = VerifyAndRePatch::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
+        auto result = VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
         if (!result.getStatus()) {
             return result;
         }
 
-        std::error_code ec;
-        std::filesystem::remove_all(m_DownloadPath, ec);
-        if (ec) {
+        if (!ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath)) {
             return {false, ErrorCode::DeleteDownloadDirFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))};
         }

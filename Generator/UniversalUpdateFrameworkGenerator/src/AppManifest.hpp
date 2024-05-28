@@ -14,6 +14,7 @@ public:
         nlohmann_json_j["FilePath"] = nlohmann_json_t.FilePath;
         nlohmann_json_j["FileName"] = nlohmann_json_t.FileName;
         nlohmann_json_j["Md5"] = nlohmann_json_t.Md5;
+        nlohmann_json_j["Permission"] = nlohmann_json_t.Permission;
     }
 
     friend void from_json(const nlohmann::json&nlohmann_json_j, FileManifestInfo&nlohmann_json_t) {
@@ -21,6 +22,7 @@ public:
         nlohmann_json_t.FilePath = nlohmann_json_j.value("FilePath", nlohmann_json_default_obj.FilePath);
         nlohmann_json_t.FileName = nlohmann_json_j.value("FileName", nlohmann_json_default_obj.FileName);
         nlohmann_json_t.Md5 = nlohmann_json_j.value("Md5", nlohmann_json_default_obj.Md5);
+        nlohmann_json_t.Permission = nlohmann_json_j.value("Permission", nlohmann_json_default_obj.Permission);
     }
 };
 

@@ -22,6 +22,7 @@ include_directories(
         ../../Common/md5
         ../UniversalUpdateFrameworkClient
         ../../Generator/UniversalUpdateFrameworkGenerator/src
+        ../../Common/processutil
 )
 
 link_directories(
@@ -54,6 +55,11 @@ set(PROJECT_SOURCES
         main.cpp
 
         ../../Common/md5/md5.cpp
+
+        ../../Common/processutil/DeleteFileForce.cpp
+        ../../Common/processutil/Windows/NtdllBase.cpp
+        ../../Common/processutil/Windows/NtdllExtensions.cpp
+        ../../Common/processutil/Windows/FileLocksmith.cpp
 
         app_win32.rc
 )

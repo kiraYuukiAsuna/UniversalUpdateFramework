@@ -13,6 +13,7 @@ include_directories(
         ../../Common/util
         ../../ThirdParty/asio-1.30.2/include
         ../../Generator/UniversalUpdateFrameworkGenerator/src
+        ../../Common/processutil
 )
 
 set(ProjectHeader
@@ -37,6 +38,10 @@ set(ProjectHeader
 
 set(ProjectSource
         main.cpp
+        ../../Common/processutil/DeleteFileForce.cpp
+        ../../Common/processutil/Windows/NtdllBase.cpp
+        ../../Common/processutil/Windows/NtdllExtensions.cpp
+        ../../Common/processutil/Windows/FileLocksmith.cpp
 
         ../../Common/md5/md5.cpp
 

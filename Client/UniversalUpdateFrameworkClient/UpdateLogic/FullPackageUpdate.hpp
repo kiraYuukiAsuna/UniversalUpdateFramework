@@ -7,9 +7,9 @@
 #include "util.hpp"
 #include <AppVersion.hpp>
 #include <AppManifest.hpp>
+#include <DeleteFileForce.hpp>
 #include <FullPackageManifest.hpp>
-#include <DifferencePackageManifest.hpp>
-#include "VerifyAndRePatch.hpp"
+#include "VerifyRePatchSetPermission.hpp"
 
 class FullPackageUpdate {
 public:
@@ -47,9 +47,7 @@ public:
         FullPackageManifestInfo appFullPackageManifest = nlohmann::json::parse(appFullPackageManifestContent);
 
         std::filesystem::path downloadRootPath = m_DownloadPath + "/" + m_AppPath + "/" + m_AppName;
-        if (std::filesystem::exists(downloadRootPath)) {
-            std::filesystem::remove_all(downloadRootPath);
-        }
+        ProcessUtil::DeleteFileRecursiveForce(downloadRootPath);
         std::filesystem::create_directories(downloadRootPath);
 
         std::filesystem::path appVersionPath =
@@ -77,15 +75,14 @@ public:
         std::cout << shellCommand << "\n";
         system(shellCommand.c_str());
 
-        std::error_code ec;
-        std::filesystem::remove_all(m_AppPath, ec);
-        if (ec) {
+        if (!ProcessUtil::DeleteFileRecursiveForce(m_AppPath)) {
             return {
                 false, ErrorCode::RemoveOldVersionDirFailed,
                 std::string(magic_enum::enum_name(ErrorCode::RemoveOldVersionDirFailed))
             };
         }
 
+        std::error_code ec;
         std::filesystem::create_directories(m_AppPath, ec);
         if (ec) {
             return {
@@ -102,12 +99,12 @@ public:
                 std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed))
             };
         } {
-            auto result = VerifyAndRePatch::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
+            auto result = VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
             if (!result.getStatus()) {
                 return result;
             }
         }
-        std::filesystem::remove_all(m_DownloadPath, ec);
+        ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath);
         if (ec) {
             return {
                 false, ErrorCode::DeleteDownloadDirFailed,
