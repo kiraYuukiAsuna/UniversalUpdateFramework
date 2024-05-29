@@ -12,6 +12,9 @@ public:
     }
 
     Version(std::string versionString) {
+        if(versionString.empty()) {
+            versionString = "0.0.0";
+        }
         auto result = util::string_split(versionString, '.');
 
         if (result.size() != 3) {
