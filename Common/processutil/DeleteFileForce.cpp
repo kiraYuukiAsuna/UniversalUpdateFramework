@@ -23,6 +23,9 @@ std::wstring Str2Wstr(const std::string& str)
 
 void ProcessUtil::TerminateProcessByFilePath(const std::string& filePath)
 {
+    if(!std::filesystem::exists(filePath)) {
+        return;
+    }
 #ifdef _WIN32
     std::vector<std::wstring> path = {Str2Wstr(filePath)};
     auto process = find_processes_recursive(path);
@@ -48,9 +51,15 @@ void ProcessUtil::TerminateProcessByFilePath(const std::string& filePath)
 #endif
 }
 
-bool ProcessUtil::DeleteFileRecursiveForce(const std::string& filePath) {
+void ProcessUtil::TerminateProcessByFilePath(const std::filesystem::path& filePath) {
+    TerminateProcessByFilePath(filePath.string());
+}
+
+bool ProcessUtil::DeleteFileRecursive(const std::string& filePath, bool forceCloseUsingOpennedFileApplication) {
     if (std::filesystem::exists(std::filesystem::path(filePath))) {
-        TerminateProcessByFilePath(filePath);
+        if(forceCloseUsingOpennedFileApplication) {
+            TerminateProcessByFilePath(filePath);
+        }
         std::error_code ec;
         std::filesystem::remove_all(filePath, ec);
         return !ec;
@@ -58,6 +67,6 @@ bool ProcessUtil::DeleteFileRecursiveForce(const std::string& filePath) {
     return true;
 }
 
-bool ProcessUtil::DeleteFileRecursiveForce(const std::filesystem::path& filePath) {
-    return DeleteFileRecursiveForce(filePath.string());
+bool ProcessUtil::DeleteFileRecursive(const std::filesystem::path& filePath, bool forceCloseUsingOpennedFileApplication) {
+    return DeleteFileRecursive(filePath.string(), forceCloseUsingOpennedFileApplication);
 }

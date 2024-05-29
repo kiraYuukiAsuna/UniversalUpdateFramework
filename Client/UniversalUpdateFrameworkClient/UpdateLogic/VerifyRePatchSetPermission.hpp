@@ -18,11 +18,13 @@ public:
             fileRelativrPathSet.insert(fileManifest.FilePath);
         }
 
+        ProcessUtil::TerminateProcessByFilePath(appPath);
+
         for (auto &dirEntry: std::filesystem::recursive_directory_iterator(appPath)) {
             if (!dirEntry.is_directory()) {
                 auto iter = fileRelativrPathSet.find(std::filesystem::relative(dirEntry.path(), appPath).string());
                 if (iter == fileRelativrPathSet.end()) {
-                    if (!ProcessUtil::DeleteFileRecursiveForce(dirEntry.path())) {
+                    if (!ProcessUtil::DeleteFileRecursive(dirEntry.path())) {
 //                        return {false, ErrorCode::DeleteFileFailed,
 //                                std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))};
                         std::cout << std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed)) << " FilePath: "<<dirEntry.path()<< "\n";
@@ -56,7 +58,7 @@ public:
                 std::cout << "Md5 not equal! Download:" << fileManifest.FilePath << "\n";
                 std::cout << "Download Path " << localFilePath << " ,server md5 = " << fileManifest.Md5<<" ,local md5="<< calcFileMd5(localFilePath)<< "\n";
 
-                if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+                if (!ProcessUtil::DeleteFileRecursive(localFilePath)) {
                     ReturnWrapper ret{false, ErrorCode::DeleteFileFailed, "DeleteFileFailed! FilePath: " + localFilePath};
                     co_return ret;
                 }

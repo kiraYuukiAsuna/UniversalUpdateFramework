@@ -42,6 +42,8 @@ public:
             serverMd5Map.insert({fileManifest.FilePath, fileManifest.Md5});
         }
 
+        ProcessUtil::TerminateProcessByFilePath(m_AppPath);
+
         if (!std::filesystem::exists(m_AppPath)) {
             std::error_code ec;
             std::filesystem::create_directories(m_AppPath, ec);
@@ -84,7 +86,7 @@ public:
         for (auto &file: deleted_elements) {
             std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
-            if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+            if (!ProcessUtil::DeleteFileRecursive(localFilePath)) {
                 co_return ReturnWrapper {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
             }
         }
@@ -99,7 +101,7 @@ public:
                 std::cout << "Download Path " << localFilePath << " ,server md5 = " << serverMd5 << " ,local md5="
                           << localMd5 << "\n";
 
-                if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+                if (!ProcessUtil::DeleteFileRecursive(localFilePath)) {
                     co_return ReturnWrapper {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
                 }
                 auto [result, _] = co_await m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
@@ -137,7 +139,7 @@ public:
             co_return result;
         }
 
-        if (!ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath)) {
+        if (!ProcessUtil::DeleteFileRecursive(m_DownloadPath)) {
             co_return ReturnWrapper {false, ErrorCode::DeleteDownloadDirFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))};
         }

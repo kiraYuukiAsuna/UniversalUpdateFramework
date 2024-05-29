@@ -46,8 +46,10 @@ public:
         }
         FullPackageManifestInfo appFullPackageManifest = nlohmann::json::parse(appFullPackageManifestContent);
 
+        ProcessUtil::TerminateProcessByFilePath(m_AppPath);
+
         std::filesystem::path downloadRootPath = m_DownloadPath + "/" + m_AppPath + "/" + m_AppName;
-        ProcessUtil::DeleteFileRecursiveForce(downloadRootPath);
+        ProcessUtil::DeleteFileRecursive(downloadRootPath);
         std::filesystem::create_directories(downloadRootPath);
 
         std::filesystem::path appVersionPath =
@@ -64,9 +66,13 @@ public:
 
         std::filesystem::path fullPackageFile =
                 downloadRootPath / ("fullpackage_" + appVersion.AppVersion);
-        m_NewVersion.empty()
+
+        auto [resultx, _] = co_await (m_NewVersion.empty()
             ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
-            : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string());
+            : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string()));
+        if (!resultx.getStatus()) {
+            co_return resultx;
+        }
 
         auto uncompresssedPath =
                 downloadRootPath / ("fullpackage_" + appVersion.AppVersion + "_uncompressed");
@@ -75,7 +81,7 @@ public:
         std::cout << shellCommand << "\n";
         system(shellCommand.c_str());
 
-        if (!ProcessUtil::DeleteFileRecursiveForce(m_AppPath)) {
+        if (!ProcessUtil::DeleteFileRecursive(m_AppPath)) {
             co_return ReturnWrapper{
                 false, ErrorCode::RemoveOldVersionDirFailed,
                 std::string(magic_enum::enum_name(ErrorCode::RemoveOldVersionDirFailed))
@@ -104,7 +110,7 @@ public:
                 co_return result;
             }
         }
-        ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath);
+        ProcessUtil::DeleteFileRecursive(m_DownloadPath);
         if (ec) {
             co_return ReturnWrapper {
                 false, ErrorCode::DeleteDownloadDirFailed,

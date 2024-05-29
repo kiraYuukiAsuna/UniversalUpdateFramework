@@ -42,8 +42,10 @@ public:
         }
         DifferencePackageManifestInfo appDifferencePackageManifest = nlohmann::json::parse(appDifferencePackageManifestContent);
 
+        ProcessUtil::TerminateProcessByFilePath(m_AppPath);
+
         std::filesystem::path downloadRootPath = m_DownloadPath + "/" + m_AppPath + "/" + m_AppName;
-        ProcessUtil::DeleteFileRecursiveForce(downloadRootPath);
+        ProcessUtil::DeleteFileRecursive(downloadRootPath);
         std::filesystem::create_directories(downloadRootPath);
 
         std::filesystem::path appVersionPath =
@@ -62,7 +64,11 @@ public:
         std::filesystem::path differencePackageFile = downloadRootPath / ("differencepackage_" +
                                                                           appDifferencePackageManifest.AppBeforeVersion + "_to_" +
                                                                           appDifferencePackageManifest.AppCurrentVersion);
-        m_ApiRequest.DownloadDifferencePackage(m_NewVersion, differencePackageFile.string());
+
+        auto [resultx, _] = co_await m_ApiRequest.DownloadDifferencePackage(m_NewVersion, differencePackageFile.string());
+        if (!resultx.getStatus()) {
+            co_return resultx;
+        }
 
         auto uncompresssedPath = downloadRootPath /
                                  ("differencepackage_" + appVersion.AppVersion + "_uncompressed");
@@ -75,7 +81,7 @@ public:
         for (auto&file: appDifferencePackageManifest.diff_deletedfiles) {
             std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
-            if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+            if (!ProcessUtil::DeleteFileRecursive(localFilePath)) {
                 co_return ReturnWrapper {
                     false, ErrorCode::DeleteFileFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))
@@ -104,7 +110,7 @@ public:
             std::cout << patchShellCommand << "\n";
             system(patchShellCommand.c_str());
 
-            if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
+            if (!ProcessUtil::DeleteFileRecursive(localFilePath)) {
                 co_return ReturnWrapper {
                     false, ErrorCode::DeleteFileFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))
@@ -147,7 +153,7 @@ public:
             co_return result;
         }
 
-        if (!ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath)) {
+        if (!ProcessUtil::DeleteFileRecursive(m_DownloadPath)) {
             co_return ReturnWrapper {
                 false, ErrorCode::DeleteDownloadDirFailed,
                 std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))
