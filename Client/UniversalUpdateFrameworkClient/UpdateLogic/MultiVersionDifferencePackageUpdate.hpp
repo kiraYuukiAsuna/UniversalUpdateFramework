@@ -9,40 +9,58 @@
 
 class MultiVersionDifferencePackageUpdate {
 public:
-    MultiVersionDifferencePackageUpdate(const std::string &host, const std::string &appName, std::string channel,
+    MultiVersionDifferencePackageUpdate(const std::string&host, const std::string&appName, std::string channel,
                                         std::string platform, std::string appPath,
                                         std::string downloadPath, std::string oldVersion, std::string newVersion)
-            : m_Host(host), m_AppName(appName), m_AppPath(std::move(appPath)),
-              m_ApiRequest(host, appName, channel, platform), m_Channel(channel), m_Platform(platform),
-              m_DownloadPath(std::move(downloadPath)), m_OldVersion(std::move(oldVersion)),
-              m_NewVersion(std::move(newVersion)) {
-
+        : m_Host(host), m_AppName(appName), m_AppPath(std::move(appPath)),
+          m_ApiRequest(host, appName, channel, platform), m_Channel(channel), m_Platform(platform),
+          m_DownloadPath(std::move(downloadPath)), m_OldVersion(std::move(oldVersion)),
+          m_NewVersion(std::move(newVersion)) {
     }
 
-    async_simple::coro::Lazy<ReturnWrapper> execute() {
+    async_simple::coro::Lazy<ReturnWrapper> execute(std::function<void(UpdateStatusInfo)> updateStatusCallback) {
         // check versions number
         auto [res, versionsContent] = co_await m_ApiRequest.GetAppVersionList();
         if (!res.getStatus()) {
-            co_return ReturnWrapper {false, ErrorCode::HttpRequestError,
-                    std::string(magic_enum::enum_name(ErrorCode::HttpRequestError))};
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::HttpRequestError)) + "\n" + res.
+                                getErrorMessage()
+            });
+            co_return ReturnWrapper{
+                false, ErrorCode::HttpRequestError,
+                std::string(magic_enum::enum_name(ErrorCode::HttpRequestError)) + "\n" + res.
+                getErrorMessage()
+            };
         }
 
         auto versionsJson = nlohmann::json::parse(versionsContent);
         std::vector<Version> versions;
-        for (auto &versionJson: versionsJson) {
+        for (auto&versionJson: versionsJson) {
             Version ver(versionJson.get<std::string>());
             versions.push_back(ver);
         }
 
         std::sort(versions.begin(), versions.end());
-        std::for_each(versions.begin(), versions.end(), [](Version &ver) {
-            std::cout << ver.getVersionString() << "\n";
+        std::for_each(versions.begin(), versions.end(), [](Version&ver) {
+            SEELE_INFO_TAG(__func__, "{}", ver.getVersionString());
         });
 
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::DownloadAppVersionFile,
+        });
         auto [res2, currentVersionContent] = co_await m_ApiRequest.GetCurrentAppVersion();
         if (!res2.getStatus()) {
-            co_return ReturnWrapper {false, ErrorCode::HttpRequestError,
-                    std::string(magic_enum::enum_name(ErrorCode::HttpRequestError))};
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::HttpRequestError)) + "\n" + res.
+                                getErrorMessage()
+            });
+            co_return ReturnWrapper{
+                false, ErrorCode::HttpRequestError,
+                std::string(magic_enum::enum_name(ErrorCode::HttpRequestError)) + "\n" + res.
+                getErrorMessage()
+            };
         }
 
         AppVersionInfo appCurrentVersion = nlohmann::json::parse(currentVersionContent);
@@ -57,8 +75,14 @@ public:
         }
         if (!bFindOldVersion) {
             // cannot find oldverion in server
-            co_return ReturnWrapper {false, ErrorCode::NoOldVersionOnServer,
-                    std::string(magic_enum::enum_name(ErrorCode::NoOldVersionOnServer))};
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::NoOldVersionOnServer))
+            });
+            co_return ReturnWrapper{
+                false, ErrorCode::NoOldVersionOnServer,
+                std::string(magic_enum::enum_name(ErrorCode::NoOldVersionOnServer))
+            };
         }
 
         bool bFindCurrentVersion{false};
@@ -71,31 +95,47 @@ public:
         }
         if (!bFindCurrentVersion) {
             // cannot find currentversion in server
-            co_return ReturnWrapper {false, ErrorCode::NoNewVersionOnServer,
-                    std::string(magic_enum::enum_name(ErrorCode::NoNewVersionOnServer))};
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::NoNewVersionOnServer))
+            });
+            co_return ReturnWrapper{
+                false, ErrorCode::NoNewVersionOnServer,
+                std::string(magic_enum::enum_name(ErrorCode::NoNewVersionOnServer))
+            };
         }
 
         if (oldVersionIdx >= currentVersionIdx || oldVersionIdx == versions.size() - 1) {
             // current version is the newest version
-            co_return ReturnWrapper {false, ErrorCode::LocalVersionIsLatestVersion,
-                    std::string(magic_enum::enum_name(ErrorCode::LocalVersionIsLatestVersion))};
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::LocalVersionIsLatestVersion))
+            });
+            co_return ReturnWrapper{
+                false, ErrorCode::LocalVersionIsLatestVersion,
+                std::string(magic_enum::enum_name(ErrorCode::LocalVersionIsLatestVersion))
+            };
         }
 
         for (int startIdx = oldVersionIdx; startIdx < currentVersionIdx; startIdx++) {
-
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::MutilVersionUpdateInstalling,
+            });
             DifferencePackageUpdate differencePackageUpdate(m_Host, m_AppName, m_Channel, m_Platform, m_AppPath,
                                                             m_DownloadPath,
                                                             versions.at(startIdx).getVersionString(),
                                                             versions.at(startIdx + 1).getVersionString()
             );
 
-            auto res = co_await differencePackageUpdate.execute();
-            if (!res.getStatus()) {
-                co_return res;
+            auto diffUpdateResult = co_await differencePackageUpdate.execute(updateStatusCallback);
+            if (!diffUpdateResult.getStatus()) {
+                co_return diffUpdateResult;
             }
         }
-
-        co_return ReturnWrapper {true};
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::Completed
+        });
+        co_return ReturnWrapper{true};
     }
 
 private:

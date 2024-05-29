@@ -5,7 +5,9 @@
 #include "UpdateCore/UpdateConfig.hpp"
 #include "Network/ApiRequest.hpp"
 #include <AppVersion.hpp>
+#include <QStandardPaths>
 
+struct UpdateStatusInfo;
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -28,7 +30,15 @@ private:
     ApiRequest* m_ApiRequest;
     AppVersionInfo m_ServerCurrentAppVersion;
 
+    std::future<ReturnWrapper> m_UpdateFuture;
+
     void refresh();
 
     void initialize();
+
+    void handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo);
+
+    std::string getTempLocation() {
+        return QStandardPaths::writableLocation(QStandardPaths::TempLocation).toStdString();
+    }
 };

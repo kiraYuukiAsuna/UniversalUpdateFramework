@@ -8,6 +8,7 @@
 #include "httplib.h"
 #include "UpdateCore/TypeDefinition.hpp"
 #include <cinatra.hpp>
+#include <Log.h>
 
 class ApiRequest {
 public:
@@ -42,12 +43,12 @@ public:
 
         if (!result.net_err && result.status == 200) {
             std::string content = std::string{result.resp_body};
-            std::cout << "Response content: " << content << std::endl;
+            SEELE_INFO_TAG(__func__, "Response content: {}", content);
 
             std::pair<ReturnWrapper, std::string> ret{{true}, content};
             co_return ret;
         } else {
-            std::cout << "Http Request Error!" + result.net_err.message() << std::endl;
+            SEELE_INFO_TAG(__func__, "Http Request Error! Error: {}", result.net_err.message());
             std::pair<ReturnWrapper, std::string> ret{{false, ErrorCode::HttpRequestError,
                      "Http Request Error!" + result.net_err.message()}, ""};
             co_return ret;

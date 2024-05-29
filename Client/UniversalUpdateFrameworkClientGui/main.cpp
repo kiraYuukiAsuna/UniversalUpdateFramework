@@ -1,10 +1,18 @@
+#include <Log.h>
 #include <QApplication>
-#include <QPushButton>
 #include <QFontDatabase>
+#include <QProcess>
+#include <util.hpp>
+
 #include "src/ui/MainWindow.h"
 
 int main(int argc, char *argv[]) {
     setbuf(stdout, nullptr);
+
+    Seele::Log::Init("logs", "Core.log", "App.log", "EditorConsole.log", true, false);
+    auto timestamp = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()).
+        time_since_epoch();
+    SEELE_INFO_TAG("Main", "App Start At: {}", util::timestampToString(timestamp.count()));
 
     QApplication a(argc, argv);
 
@@ -22,5 +30,12 @@ int main(int argc, char *argv[]) {
     MainWindow mainWindow;
     mainWindow.show();
 
-    return QApplication::exec();
+    auto exitCode = QApplication::exec();
+    if (exitCode == 888) {
+        QProcess::startDetached(qApp->applicationFilePath(), QStringList());
+    }
+
+    Seele::Log::Shutdown();
+
+    return exitCode;
 }

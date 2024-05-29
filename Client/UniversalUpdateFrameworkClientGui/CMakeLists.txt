@@ -24,6 +24,9 @@ include_directories(
         ../../Generator/UniversalUpdateFrameworkGenerator/src
         ../../Common/processutil
         ../../ThirdParty/cinatra/include
+        ../../ThirdParty/spdlog/include
+        ../../ThirdParty/backward
+        ../../Common/log
 )
 
 link_directories(
@@ -56,6 +59,9 @@ set(PROJECT_SOURCES
         main.cpp
         ../../Common/processutil/DeleteFileForce.cpp
         ../../Common/md5/md5.cpp
+
+        ../../Common/log/Log.cpp
+        ../../ThirdParty/backward/backward.cpp
 )
 
 if (WIN32)

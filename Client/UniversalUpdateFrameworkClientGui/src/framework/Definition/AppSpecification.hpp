@@ -35,6 +35,13 @@ public:
     }
 
     ReturnWrapper readFromFile() {
+        if(!std::filesystem::exists(m_ConfigFilePath)) {
+            if(!std::filesystem::exists(std::filesystem::path(m_ConfigFilePath).parent_path())) {
+                std::filesystem::create_directories(std::filesystem::path(m_ConfigFilePath).parent_path());
+            }
+            writeToFile();
+        }
+
         std::ifstream infile(m_ConfigFilePath);
         if (!infile.is_open()) {
             return {false, ErrorCode::OpenConfigFileFailed,

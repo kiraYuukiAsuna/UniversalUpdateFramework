@@ -1,4 +1,7 @@
 #include "MainWindow.h"
+
+#include <Log.h>
+
 #include "ui_MainWindow.h"
 #include "src/framework/Definition/ImageDefination.hpp"
 #include <QMessageBox>
@@ -44,47 +47,48 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
 
         switch (ui->UpdateModeSelect->currentIndex()) {
             case 0: {
-                updateMode = UpdateMode::MultiVersionDifferencePackageUpdate;
-                break;
+                updateMode = UpdateMode::MultiVersionDifferencePackageUpdate; {
+                    break;
+                }
             }
             case 1: {
-                updateMode = UpdateMode::DifferenceUpdate;
-                break;
+                updateMode = UpdateMode::DifferenceUpdate; {
+                    break;
+                }
             }
             case 2: {
-                updateMode = UpdateMode::FullPackageUpdate;
-                break;
+                updateMode = UpdateMode::FullPackageUpdate; {
+                    break;
+                }
             }
             default: {
-                updateMode = UpdateMode::DifferenceUpdate;
-                break;
+                updateMode = UpdateMode::DifferenceUpdate; {
+                    break;
+                }
             }
+        }
+
+        int result = QMessageBox::information(this, "Info",
+                                              "Are you sure to start update? Please close your application and save your data before update, or you may lose your data and update may fail to work!",
+                                              QMessageBox::Yes,
+                                              QMessageBox::No);
+        if (result != QMessageBox::Yes) {
+            return;
         }
 
         UpdateConfigIo updateConfigIo(m_AppSpecification.appUpdateConfigFile);
         updateConfigIo.readFromFile();
 
-        auto result = std::async(std::launch::async,
-                                 handleUpdateMode,
-                                 std::ref(updateMode),
-                                 std::ref(updateConfigIo),
-                                 m_ServerCurrentAppVersion.AppVersion);
+        ui->UpdateLog->clear();
 
-        ui->UpdateProgressBar->setValue(10);
-
-        auto updateResult = result.get();
-        if (updateResult.getStatus()) {
-            ui->UpdateProgressBar->setValue(100);
-            QMessageBox::information(this, "Info", "Update finished!");
-        }
-        else {
-            ui->UpdateProgressBar->setValue(0);
-            QMessageBox::critical(this, "Info",
-                                  "Update failed!" + QString::fromStdString(updateResult.getErrorMessage()));
-        }
-
-        refresh();
-        m_AppSpecificationIo.writeToFile();
+        this->setEnabled(false);
+        m_UpdateFuture = std::async(std::launch::async,
+                                    handleUpdateMode,
+                                    updateMode,
+                                    updateConfigIo,
+                                    m_ServerCurrentAppVersion.AppVersion, [this](UpdateStatusInfo updateStatusInfo) {
+                                        handleUpdateStatusInfo(updateStatusInfo);
+                                    });
     });
 
 
@@ -116,7 +120,8 @@ void MainWindow::refresh() {
     ui->LocalCurrentVersion->setText(QString::fromStdString(localCurrentVersion.getVersionString()));
 
     try {
-        if (auto [result, appVersionContent] = async_simple::coro::syncAwait(m_ApiRequest->GetCurrentAppVersion()); result.getStatus()) {
+        if (auto [result, appVersionContent] = async_simple::coro::syncAwait(m_ApiRequest->GetCurrentAppVersion());
+            result.getStatus()) {
             m_ServerCurrentAppVersion = AppVersionInfo(nlohmann::json::parse(appVersionContent));
             auto serverCurrentVersion = Version{m_ServerCurrentAppVersion.AppVersion};
 
@@ -125,21 +130,23 @@ void MainWindow::refresh() {
 
             if (localCurrentVersion < serverCurrentVersion) {
                 ui->UpdateStatus->setText("New Version Available!");
-                if (auto [result, appManifestContent] = async_simple::coro::syncAwait(m_ApiRequest->GetCurrentAppManifest()); result.getStatus()) {
+                if (auto [result, appManifestContent] = async_simple::coro::syncAwait(
+                    m_ApiRequest->GetCurrentAppManifest()); result.getStatus()) {
                     AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
-                    ui->textEdit->setMarkdown(QString::fromStdString(appManifest.UpdateReadMe));
+                    ui->UpdateReadMe->setMarkdown(QString::fromStdString(appManifest.UpdateReadMe));
                 }
             }
             else {
                 ui->UpdateStatus->setText("No Update Available!");
-                ui->textEdit->setMarkdown(QString::fromStdString("# No Update Available!"));
+                ui->UpdateReadMe->setMarkdown(QString::fromStdString("# No Update Available!"));
             }
         }
         else {
             QMessageBox::critical(this, "Error", QString::fromLocal8Bit(result.getErrorMessage()));
             ui->UpdateStatus->setText("Network Error!");
         }
-    }catch (std::exception& e) {
+    }
+    catch (std::exception&e) {
         QMessageBox::critical(this, "Error", e.what());
         ui->UpdateStatus->setText("Network Error!");
     }
@@ -163,4 +170,134 @@ void MainWindow::initialize() {
 
     m_ApiRequest = new ApiRequest(m_UpdateConfig.host, m_UpdateConfig.appName, m_UpdateConfig.channel,
                                   m_UpdateConfig.platform);
+}
+
+void MainWindow::handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo) {
+    // auto* th = new std::thread([&]() {
+    //     while (true) {
+    //         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    //         QMetaObject::invokeMethod(this, [this]() {
+    //             ui->UpdateLog->setText("Hello form thread");
+    //             qDebug() << "Hello from thread";
+    //         }, Qt::QueuedConnection);
+    //     }
+    // });
+    // th->detach();
+    QMetaObject::invokeMethod(this, [this, updateStatusInfo]() {
+        auto timestamp = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()).
+                time_since_epoch();
+        util::timestampToString(timestamp.count());
+        ui->UpdateLog->append(QString::fromStdString(util::timestampToString(timestamp.count())));
+        static int progress = 0;
+        progress++;
+        if (progress > 100) {
+            progress = 0;
+        }
+        ui->UpdateProgressBar->setValue(progress);
+        auto statusName = std::string{magic_enum::enum_name(updateStatusInfo.status)};
+        switch (updateStatusInfo.status) {
+            case UpdateStatus::None: { break; }
+            case UpdateStatus::DownloadAppVersionFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::DownloadAppManifestFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::DownloadFullPackageManifestFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::DownloadFullPackageFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::DownloadDifferencePackageManifestFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::DownloadDifferencePackageFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::FullPackageUpdateInstalling: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::DifferencePackageUpdateInstalling: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::DifferenceUpdateInstalling: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::MutilVersionUpdateInstalling: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                break;
+            }
+            case UpdateStatus::VerifyingUpdate: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::RepatchingUpdate: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::VerifyingFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::DownloadingFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::CopyingFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::DeletingFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::UpdatingFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::CreatingFile: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                break;
+            }
+            case UpdateStatus::Warning: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.WarningMessage));
+                break;
+            }
+            case UpdateStatus::Completed: {
+                ui->UpdateLog->append(QString::fromStdString(statusName));
+                auto future = m_UpdateFuture.get();
+                if (future.getStatus()) {
+                    ui->UpdateProgressBar->setValue(100);
+                    QMessageBox::information(this, "Info", "Update finished!");
+                }
+                else {
+                    ui->UpdateProgressBar->setValue(0);
+                    QMessageBox::critical(this, "Info",
+                                          "Update failed!" + QString::fromStdString(future.getErrorMessage()));
+                }
+                m_AppSpecificationIo.writeToFile();
+                this->setEnabled(true);
+                refresh();
+                break;
+            }
+            case UpdateStatus::Failed: {
+                ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.ErrorMessage));
+                this->setEnabled(true);
+                QMessageBox::critical(this, "Info",
+                                      "Update failed!" + QString::fromStdString(updateStatusInfo.ErrorMessage));
+                break;
+            }
+        }
+        ui->UpdateLog->moveCursor(QTextCursor::End);
+    }, Qt::QueuedConnection);
 }

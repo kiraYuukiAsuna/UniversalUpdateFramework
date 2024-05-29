@@ -9,6 +9,8 @@
 #include <AppManifest.hpp>
 #include <DeleteFileForce.hpp>
 #include <FullPackageManifest.hpp>
+#include <UpdateCore/UpdateStatus.hpp>
+
 #include "VerifyRePatchSetPermission.hpp"
 
 class FullPackageUpdate {
@@ -21,26 +23,36 @@ public:
           m_DownloadPath(std::move(downloadPath)), m_NewVersion(std::move(newVersion)) {
     }
 
-    async_simple::coro::Lazy<ReturnWrapper> execute() {
+    async_simple::coro::Lazy<ReturnWrapper> execute(std::function<void(UpdateStatusInfo)> updateStatusCallback) {
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::DownloadAppVersionFile,
+        });
         auto [result1, appVersionContent] = co_await (m_NewVersion.empty()
-                                                ? m_ApiRequest.GetCurrentAppVersion()
-                                                : m_ApiRequest.GetAppVersion(m_NewVersion));
+                                                          ? m_ApiRequest.GetCurrentAppVersion()
+                                                          : m_ApiRequest.GetAppVersion(m_NewVersion));
         if (!result1.getStatus()) {
             co_return result1;
         }
         AppVersionInfo appVersion = nlohmann::json::parse(appVersionContent);
 
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::DownloadAppManifestFile,
+        });
         auto [result2, appManifestContent] = co_await (m_NewVersion.empty()
-                                                 ? m_ApiRequest.GetCurrentAppManifest()
-                                                 : m_ApiRequest.GetAppManifest(m_NewVersion));
+                                                           ? m_ApiRequest.GetCurrentAppManifest()
+                                                           : m_ApiRequest.GetAppManifest(m_NewVersion));
         if (!result2.getStatus()) {
             co_return result2;
         }
         AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
 
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::DownloadFullPackageManifestFile,
+        });
         auto [result3, appFullPackageManifestContent] = co_await (m_NewVersion.empty()
-                                                            ? m_ApiRequest.GetCurrentAppFullPackageManifest()
-                                                            : m_ApiRequest.GetAppFullPackageManifest(m_NewVersion));
+                                                                      ? m_ApiRequest.GetCurrentAppFullPackageManifest()
+                                                                      : m_ApiRequest.GetAppFullPackageManifest(
+                                                                          m_NewVersion));
         if (!result3.getStatus()) {
             co_return result3;
         }
@@ -67,9 +79,12 @@ public:
         std::filesystem::path fullPackageFile =
                 downloadRootPath / ("fullpackage_" + appVersion.AppVersion);
 
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::DownloadFullPackageFile,
+        });
         auto [resultx, _] = co_await (m_NewVersion.empty()
-            ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
-            : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string()));
+                                          ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
+                                          : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string()));
         if (!resultx.getStatus()) {
             co_return resultx;
         }
@@ -78,20 +93,35 @@ public:
                 downloadRootPath / ("fullpackage_" + appVersion.AppVersion + "_uncompressed");
         std::string shellCommand = std::format(R"({} "" "{}" "{}")", hpatchzExecuable, fullPackageFile.string(),
                                                uncompresssedPath.string());
-        std::cout << shellCommand << "\n";
+        SEELE_INFO_TAG(__func__, "{}", shellCommand);
         system(shellCommand.c_str());
 
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::FullPackageUpdateInstalling,
+        });
+
         if (!ProcessUtil::DeleteFileRecursive(m_AppPath)) {
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::RemoveOldVersionDirFailed)) + " , File:" +
+                                m_AppPath
+            });
             co_return ReturnWrapper{
                 false, ErrorCode::RemoveOldVersionDirFailed,
-                std::string(magic_enum::enum_name(ErrorCode::RemoveOldVersionDirFailed))
+                std::string(magic_enum::enum_name(ErrorCode::RemoveOldVersionDirFailed)) + " , File:" +
+                m_AppPath
             };
         }
 
         std::error_code ec;
         std::filesystem::create_directories(m_AppPath, ec);
         if (ec) {
-            co_return ReturnWrapper {
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed)) + " , File:" +
+                                m_AppPath
+            });
+            co_return ReturnWrapper{
                 false, ErrorCode::CreateAppDirFailed,
                 std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))
             };
@@ -100,24 +130,39 @@ public:
         std::filesystem::copy(uncompresssedPath, m_AppPath, std::filesystem::copy_options::recursive |
                                                             std::filesystem::copy_options::overwrite_existing, ec);
         if (ec) {
-            co_return ReturnWrapper {
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed)) + " , From File:"
+                                + uncompresssedPath.string() + " , To File:" + m_AppPath
+            });
+            co_return ReturnWrapper{
                 false, ErrorCode::CopyNewVersionDirFailed,
-                std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed))
+                std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed)) + " , From File:"
+                + uncompresssedPath.string() + " , To File:" + m_AppPath
             };
         } {
-            auto result = co_await VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
+            auto result = co_await
+                    VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath,
+                                                        updateStatusCallback);
             if (!result.getStatus()) {
                 co_return result;
             }
         }
         ProcessUtil::DeleteFileRecursive(m_DownloadPath);
         if (ec) {
-            co_return ReturnWrapper {
+            updateStatusCallback(UpdateStatusInfo{
+                .status = UpdateStatus::Failed,
+                .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed)) + " File:" +
+                                m_DownloadPath
+            });
+            co_return ReturnWrapper{
                 false, ErrorCode::DeleteDownloadDirFailed,
-                std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))
+                std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed)) + " File:" + m_DownloadPath
             };
         }
-
+        updateStatusCallback(UpdateStatusInfo{
+            .status = UpdateStatus::Completed
+        });
         co_return ReturnWrapper{true};
     }
 

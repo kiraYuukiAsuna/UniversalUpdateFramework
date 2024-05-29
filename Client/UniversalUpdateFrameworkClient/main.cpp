@@ -54,7 +54,7 @@ inline int handleArgument(int argc, char* argv[]) {
                     return -1;
                 }
 
-                auto updateResult = handleUpdateMode(mode, config, updateToNewVersion);
+                auto updateResult = handleUpdateMode(mode, config, updateToNewVersion,[](UpdateStatusInfo updateStatusInfo){});
                 if (updateResult.getStatus()) {
                     std::cout << "Update successfully!\n";
                 }

@@ -9,11 +9,12 @@
 #include "UpdateCore/UpdateConfig.hpp"
 #include <Defination.hpp>
 #include "UpdateSelf.hpp"
+#include "UpdateCore/UpdateStatus.hpp"
 
-inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, std::string updateToNewVersion) {
+inline ReturnWrapper handleUpdateMode(UpdateMode mode, UpdateConfigIo config, std::string updateToNewVersion, std::function<void(UpdateStatusInfo)> updateStatusCallback) {
     switch (mode) {
         case UpdateMode::Unknown: {
-            std::cout << "Unknown update mode!\n";
+            SEELE_INFO_TAG(__func__, "{}", "Unknown update mode!");
             return {false};
         }
         case UpdateMode::FullPackageUpdate: {
@@ -24,9 +25,9 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                      config.getConfig().appPath,
                                      config.getConfig().downloadPath,
                                      updateToNewVersion);
-            auto res = async_simple::coro::syncAwait(update.execute());
+            auto res = async_simple::coro::syncAwait(update.execute(updateStatusCallback));
 
-            std::cout << res.getErrorMessage() << "\n";
+            SEELE_INFO_TAG(__func__, "{}", res.getErrorMessage());
 
             if (res.getStatus()) {
                 auto cfg = config.getConfig();
@@ -39,7 +40,7 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
         }
         case UpdateMode::DifferencePackageUpdate: {
             if (config.getConfig().localCurrentVersion == "x.x.x") {
-                std::cout << "Invalid local current version!\n";
+                SEELE_INFO_TAG(__func__, "{}", "Invalid local current version!");
                 return {false};
             }
 
@@ -51,8 +52,9 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                            config.getConfig().downloadPath,
                                            config.getConfig().localCurrentVersion,
                                            updateToNewVersion);
-            auto res = async_simple::coro::syncAwait(update.execute());
-            std::cout << res.getErrorMessage() << "\n";
+            auto res = async_simple::coro::syncAwait(update.execute(updateStatusCallback));
+
+            SEELE_INFO_TAG(__func__, "{}", res.getErrorMessage());
 
             if (res.getStatus()) {
                 auto cfg = config.getConfig();
@@ -65,7 +67,7 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
         }
         case UpdateMode::MultiVersionDifferencePackageUpdate: {
             if (config.getConfig().localCurrentVersion == "x.x.x") {
-                std::cout << "Invaid local current version!\n";
+                SEELE_INFO_TAG(__func__, "{}", "Invaid local current version!");
                 return {false};
             }
 
@@ -77,8 +79,9 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                                        config.getConfig().downloadPath,
                                                        config.getConfig().localCurrentVersion,
                                                        updateToNewVersion);
-            auto res = async_simple::coro::syncAwait(update.execute());
-            std::cout << res.getErrorMessage() << "\n";
+            auto res = async_simple::coro::syncAwait(update.execute(updateStatusCallback));
+
+            SEELE_INFO_TAG(__func__, "{}", res.getErrorMessage());
 
             if (res.getStatus()) {
                 auto cfg = config.getConfig();
@@ -97,8 +100,9 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                     config.getConfig().appPath,
                                     config.getConfig().downloadPath,
                                     updateToNewVersion);
-            auto res = async_simple::coro::syncAwait(update.execute());
-            std::cout << res.getErrorMessage() << "\n";
+            auto res = async_simple::coro::syncAwait(update.execute(updateStatusCallback));
+
+            SEELE_INFO_TAG(__func__, "{}", res.getErrorMessage());
 
             if (res.getStatus()) {
                 auto cfg = config.getConfig();

@@ -15,6 +15,9 @@ include_directories(
         ../../Generator/UniversalUpdateFrameworkGenerator/src
         ../../Common/processutil
         ../../ThirdParty/cinatra/include
+        ../../ThirdParty/spdlog/include
+        ../../ThirdParty/backward
+        ../../Common/log
 )
 
 set(ProjectHeader
@@ -35,6 +38,9 @@ set(ProjectHeader
 
         UpdateCore/TypeDefinition.hpp
         UpdateCore/ErrorCode.hpp
+
+        ../../Common/log/Log.cpp
+        ../../ThirdParty/backward/backward.cpp
 )
 
 set(ProjectSource
