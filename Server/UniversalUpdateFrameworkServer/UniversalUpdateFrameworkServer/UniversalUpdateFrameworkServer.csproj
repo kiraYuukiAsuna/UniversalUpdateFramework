@@ -29,4 +29,8 @@
       <None Remove="appdata\**" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Definition\" />
+    </ItemGroup>
+
 </Project>

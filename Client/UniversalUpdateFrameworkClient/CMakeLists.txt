@@ -29,7 +29,7 @@ set(ProjectHeader
 
         UpdateLogic/FullPackageUpdate.hpp
         UpdateLogic/DifferencePackageUpdate.hpp
-        UpdateLogic/VerifyAndRePatch.hpp
+        UpdateLogic/VerifyRePatchSetPermission.hpp
         UpdateLogic/MultiVersionDifferencePackageUpdate.hpp
 
         UpdateCore/TypeDefinition.hpp
@@ -39,12 +39,20 @@ set(ProjectHeader
 set(ProjectSource
         main.cpp
         ../../Common/processutil/DeleteFileForce.cpp
-        ../../Common/processutil/Windows/NtdllBase.cpp
-        ../../Common/processutil/Windows/NtdllExtensions.cpp
-        ../../Common/processutil/Windows/FileLocksmith.cpp
-
         ../../Common/md5/md5.cpp
-
 )
+
+if (WIN32)
+    set(ProjectSource
+            ${ProjectSource}
+            ../../Common/processutil/Windows/NtdllBase.cpp
+            ../../Common/processutil/Windows/NtdllExtensions.cpp
+            ../../Common/processutil/Windows/FileLocksmith.cpp
+    )
+elseif (UNIX)
+
+elseif (APPLE)
+
+endif ()
 
 add_executable(UniversalUpdateFrameworkClient ${ProjectHeader} ${ProjectSource})

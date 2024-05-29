@@ -47,6 +47,7 @@ inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionF
     AppManifestInfo appMainifestInfo;
     appMainifestInfo.AppName = info.AppName;
     appMainifestInfo.AppVersion = info.AppCurrentVersion;
+    appMainifestInfo.UpdateReadMe = info.UpdateReadMe;
 
     std::filesystem::path newPath(info.NewVersionPath);
     for (auto&directoryEntry: std::filesystem::recursive_directory_iterator(newPath)) {
