@@ -24,7 +24,8 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                      config.getConfig().appPath,
                                      config.getConfig().downloadPath,
                                      updateToNewVersion);
-            auto res = update.execute();
+            auto res = async_simple::coro::syncAwait(update.execute());
+
             std::cout << res.getErrorMessage() << "\n";
 
             if (res.getStatus()) {
@@ -50,7 +51,7 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                            config.getConfig().downloadPath,
                                            config.getConfig().localCurrentVersion,
                                            updateToNewVersion);
-            auto res = update.execute();
+            auto res = async_simple::coro::syncAwait(update.execute());
             std::cout << res.getErrorMessage() << "\n";
 
             if (res.getStatus()) {
@@ -76,7 +77,7 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                                        config.getConfig().downloadPath,
                                                        config.getConfig().localCurrentVersion,
                                                        updateToNewVersion);
-            auto res = update.execute();
+            auto res = async_simple::coro::syncAwait(update.execute());
             std::cout << res.getErrorMessage() << "\n";
 
             if (res.getStatus()) {
@@ -96,7 +97,7 @@ inline ReturnWrapper handleUpdateMode(UpdateMode &mode, UpdateConfigIo &config, 
                                     config.getConfig().appPath,
                                     config.getConfig().downloadPath,
                                     updateToNewVersion);
-            auto res = update.execute();
+            auto res = async_simple::coro::syncAwait(update.execute());
             std::cout << res.getErrorMessage() << "\n";
 
             if (res.getStatus()) {

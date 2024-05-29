@@ -11,7 +11,7 @@
 
 class VerifyRePatchSetPermission {
 public:
-    static ReturnWrapper
+    static async_simple::coro::Lazy<ReturnWrapper>
     execute(ApiRequest &api, AppVersionInfo &appVersion, AppManifestInfo &appManifest, const std::string &appPath) {
         std::unordered_set<string> fileRelativrPathSet;
         for (auto &fileManifest: appManifest.Manifests) {
@@ -35,18 +35,21 @@ public:
             auto localFilePath = appPath + "/" + fileManifest.FilePath;
             if (!std::filesystem::exists(localFilePath)) {
                 std::cout << "Not exist! Download:" << fileManifest.FilePath << "\n";
-                auto [result, _] = api.DownloadFileFromFullPackage(appVersion.AppVersion,
+
+                auto [result, _] = co_await api.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                    fileManifest.Md5, localFilePath);
                 if (!result.getStatus()) {
-                    return {false, ErrorCode::DownloadFileFailed,
+                    ReturnWrapper ret{false, ErrorCode::DownloadFileFailed,
                             std::string(magic_enum::enum_name(ErrorCode::DownloadFileFailed))};
+                    co_return ret;
                 }
             }
 
             std::ifstream infile(localFilePath);
             if (!infile.is_open()) {
-                return {false, ErrorCode::AccessFileFailed,
+                ReturnWrapper ret{false, ErrorCode::AccessFileFailed,
                         std::string(magic_enum::enum_name(ErrorCode::AccessFileFailed))};
+                co_return ret;
             }
 
             if (fileManifest.Md5 != calcFileMd5(localFilePath)) {
@@ -54,19 +57,22 @@ public:
                 std::cout << "Download Path " << localFilePath << " ,server md5 = " << fileManifest.Md5<<" ,local md5="<< calcFileMd5(localFilePath)<< "\n";
 
                 if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
-                    return {false, ErrorCode::DeleteFileFailed, "DeleteFileFailed! FilePath: " + localFilePath};
+                    ReturnWrapper ret{false, ErrorCode::DeleteFileFailed, "DeleteFileFailed! FilePath: " + localFilePath};
+                    co_return ret;
                 }
-                auto [result, _] = api.DownloadFileFromFullPackage(appVersion.AppVersion,
+                auto [result, _] = co_await api.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                    fileManifest.Md5, localFilePath);
                 if (!result.getStatus()) {
-                    return {false, ErrorCode::DownloadFileFailed,
+                    ReturnWrapper ret{false, ErrorCode::DownloadFileFailed,
                             std::string(magic_enum::enum_name(ErrorCode::DownloadFileFailed))};
+                    co_return ret;
                 }
             }
 
             FilePermission filePermission(localFilePath);
             filePermission.WritePermission(fileManifest.Permission);
         }
-        return {true};
+        ReturnWrapper ret{true};
+        co_return ret;
     }
 };

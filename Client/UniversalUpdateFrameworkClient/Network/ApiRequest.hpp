@@ -7,6 +7,7 @@
 #include <filesystem>
 #include "httplib.h"
 #include "UpdateCore/TypeDefinition.hpp"
+#include <cinatra.hpp>
 
 class ApiRequest {
 public:
@@ -15,42 +16,80 @@ public:
 
     }
 
-    std::pair<ReturnWrapper, std::string> GetCurrentAppVersion() {
+    async_simple::coro::Lazy<std::pair<ReturnWrapper, std::string>>
+    apiRequestDownload(std::string api, std::string localSaveFilePath, size_t &bytes_received,
+                       size_t &bytes_total) {
+        cinatra::coro_http_client client{};
+        std::string uri = std::format("{}{}", m_Host, api);
+
+        std::error_code ec{};
+        std::filesystem::remove(localSaveFilePath, ec);
+        auto result = co_await client.async_download(uri, localSaveFilePath);
+        if(!result.net_err && (result.status == 200 || result.status == 206)) {
+            std::pair<ReturnWrapper, std::string> ret{{true}, localSaveFilePath};
+            co_return ret;
+        } else {
+            std::pair<ReturnWrapper, std::string> ret{{false, ErrorCode::HttpResponseError,
+                     "Http Response Error!" + result.net_err.message()}, ""};
+            co_return ret;
+        }
+    }
+
+    async_simple::coro::Lazy<std::pair<ReturnWrapper, std::string>> httpRequestGet(std::string api) {
+        cinatra::coro_http_client client{};
+        std::string url = std::format("{}{}", m_Host, api);
+        auto result = co_await client.async_get(url);
+
+        if (!result.net_err && result.status == 200) {
+            std::string content = std::string{result.resp_body};
+            std::cout << "Response content: " << content << std::endl;
+
+            std::pair<ReturnWrapper, std::string> ret{{true}, content};
+            co_return ret;
+        } else {
+            std::cout << "Http Request Error!" + result.net_err.message() << std::endl;
+            std::pair<ReturnWrapper, std::string> ret{{false, ErrorCode::HttpRequestError,
+                     "Http Request Error!" + result.net_err.message()}, ""};
+            co_return ret;
+        }
+    }
+
+    auto GetCurrentAppVersion() {
         std::string url = std::format("/api/v1/GetCurrentAppVersion?appname={}&channel={}&platform={}", m_AppName,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> GetAppVersion(std::string version) {
+    auto GetAppVersion(std::string version) {
         std::string url = std::format("/api/v1/GetAppVersion?appname={}&appversion={}&channel={}&platform={}", m_AppName, version,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> GetAppVersionList() {
+    auto GetAppVersionList() {
         std::string url = std::format("/api/v1/GetAppVersionList?appname={}&channel={}&platform={}", m_AppName,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> GetCurrentAppManifest() {
+    auto GetCurrentAppManifest() {
         std::string url = std::format("/api/v1/GetCurrentAppManifest?appname={}&channel={}&platform={}", m_AppName,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> GetAppManifest(std::string version) {
+    auto GetAppManifest(std::string version) {
         std::string url = std::format("/api/v1/GetAppManifest?appname={}&appversion={}&channel={}&platform={}", m_AppName, version,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> GetCurrentAppFullPackageManifest() {
+    auto GetCurrentAppFullPackageManifest() {
         std::string url = std::format("/api/v1/GetCurrentAppFullPackage?appname={}&channel={}&platform={}", m_AppName,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> GetAppFullPackageManifest(std::string version) {
+    auto GetAppFullPackageManifest(std::string version) {
         std::string url = std::format("/api/v1/GetAppFullPackage?appname={}&appversion={}&channel={}&platform={}", m_AppName, version,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> DownloadCurrentFullPackage(std::string localSaveFilePath) {
+    auto DownloadCurrentFullPackage(std::string localSaveFilePath) {
         std::string url = std::format("/api/v1/DownloadCurrentFullPackage?appname={}&channel={}&platform={}", m_AppName,m_Channel,m_Platform);
         size_t bytes_received = 0;
         size_t bytes_total = 0;
@@ -69,7 +108,7 @@ public:
         return res;
     }
 
-    std::pair<ReturnWrapper, std::string> DownloadFullPackage(std::string version, std::string localSaveFilePath) {
+    auto DownloadFullPackage(std::string version, std::string localSaveFilePath) {
         std::string url = std::format("/api/v1/DownloadFullPackage?appname={}&appversion={}&channel={}&platform={}", m_AppName, version,m_Channel,m_Platform);
         size_t bytes_received = 0;
         size_t bytes_total = 0;
@@ -88,7 +127,7 @@ public:
         return res;
     }
 
-    std::pair<ReturnWrapper, std::string>
+    auto
     DownloadFileFromFullPackage(std::string version, std::string md5, std::string localSaveFilePath) {
         std::string url = std::format("/api/v1/DownloadFileFromFullPackage?appname={}&appversion={}&md5={}&channel={}&platform={}", m_AppName,
                                       version, md5,m_Channel,m_Platform);
@@ -109,17 +148,17 @@ public:
         return res;
     }
 
-    std::pair<ReturnWrapper, std::string> GetCurrentAppDifferencePackageManifest() {
+    auto GetCurrentAppDifferencePackageManifest() {
         std::string url = std::format("/api/v1/GetCurrentAppDifferencePackage?appname={}&channel={}&platform={}", m_AppName,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> GetAppDifferencePackageManifest(std::string version) {
+    auto GetAppDifferencePackageManifest(std::string version) {
         std::string url = std::format("/api/v1/GetAppDifferencePackage?appname={}&appversion={}&channel={}&platform={}", m_AppName, version,m_Channel,m_Platform);
-        return apiRequest(url);
+        return httpRequestGet(url);
     }
 
-    std::pair<ReturnWrapper, std::string> DownloadCurrentDifferencePackage(std::string localSaveFilePath) {
+    auto DownloadCurrentDifferencePackage(std::string localSaveFilePath) {
         std::string url = std::format("/api/v1/DownloadCurrentDifferencePackage?appname={}&channel={}&platform={}", m_AppName,m_Channel,m_Platform);
         size_t bytes_received = 0;
         size_t bytes_total = 0;
@@ -138,7 +177,7 @@ public:
         return res;
     }
 
-    std::pair<ReturnWrapper, std::string>
+    auto
     DownloadDifferencePackage(std::string version, std::string localSaveFilePath) {
         std::string url = std::format("/api/v1/DownloadDifferencePackage?appname={}&appversion={}&channel={}&platform={}", m_AppName, version,m_Channel,m_Platform);
         size_t bytes_received = 0;
@@ -159,98 +198,6 @@ public:
     }
 
 private:
-    std::pair<ReturnWrapper, std::string> apiRequest(std::string requestUrl) {
-//        std::string host = "http://api.kirayuukiasuna.cloud";
-//        std::string appname = "GameApp1";
-//        std::string requestUrl = std::format("/api/v1/GetCurrentAppVersion?appname={}", appname);
-
-        httplib::Client client(m_Host);
-        httplib::Result result = client.Get(requestUrl);
-        if (result && result->status == 200) {
-            std::string content = result->body;
-            std::cout << "Response content: " << content << std::endl;
-            return {{true}, content};
-
-        } else {
-            std::cout << "Request failed with status code: " << (result ? result->status : -1) << std::endl;
-            return {{false, ErrorCode::HttpRequestError,
-                     "Http Request Error!" + std::string(magic_enum::enum_name(result.error()))}, ""};
-        }
-    }
-
-    std::pair<ReturnWrapper, std::string>
-    apiRequestDownload(std::string requestUrl, std::string localSaveFilePath, size_t &bytes_received,
-                       size_t &bytes_total) {
-//        const char* server_address = "http://192.168.0.114:5275";
-//        const char* endpoint = "/api/v1/DownloadFullPackage?appname=GameApp1&appversion=1.0.0";
-
-// Create an HTTP client instance
-        httplib::Client client(m_Host);
-
-        std::filesystem::path filePath = localSaveFilePath;
-        std::ofstream file;
-        bool file_opened = false;
-
-// Send a GET request to the server
-        httplib::Headers headers;
-        bytes_received = getFileSize(filePath.string());
-        headers.emplace("Range", "bytes=" + std::to_string(bytes_received) + "-");
-
-        auto res = client.Get(requestUrl, headers, [&](const httplib::Response &res) {
-            // Get the filename from the Content-Disposition header
-            if (!file_opened) {
-//            auto header = res.get_header_value("Content-Disposition");
-//            if (!header.empty()) {
-//                auto pos = header.find("filename=");
-//                if (pos != std::string::npos) {
-//                    filename = header.substr(pos + 10);
-//                    // Remove quotes from the filename
-//                    filename.erase(std::remove(filename.begin(), filename.end(), '\"'), filename.end());
-//                }
-//            }
-
-                bytes_total = std::stoul(res.get_header_value("Content-Length")) + bytes_received;
-
-                // Open a file stream to save the downloaded file
-                if (auto directory = filePath.parent_path(); !std::filesystem::exists(directory)) {
-                    std::error_code ec;
-                    std::filesystem::create_directories(directory, ec);
-                    if (ec) {
-                        return false;
-                    }
-                }
-
-                file.open(filePath.string(), std::ios::binary | std::ios::app);
-                if (!file.is_open()) {
-                    std::cerr << "Failed to open file for writing: " << filePath.string() << std::endl;
-                    return false;
-                }
-
-                file_opened = true;
-            }
-            return true;
-        }, [&](const char *data, size_t data_length) {
-            // Write the received data to the file
-            file.write(data, data_length);
-            bytes_received += data_length;
-            return true;
-        });
-
-// Check if the request was successful
-        if (res && (res->status == 200 || res->status == 206)) {
-            file.close();
-            std::cout << "File Downloaded Successfully: " << localSaveFilePath << std::endl;
-
-            std::filesystem::permissions(localSaveFilePath, std::filesystem::perms::owner_all, std::filesystem::perm_options::add);
-
-            return {{true}, localSaveFilePath};
-        } else {
-            std::cerr << "Failed To Download File: " << (res ? res->status : -1) << std::endl;
-            return {{false, ErrorCode::HttpResponseError,
-                     "Http Response Error!" + std::string(magic_enum::enum_name(res.error()))}, ""};
-        }
-    }
-
     size_t getFileSize(const std::string &filePath) {
         if (std::filesystem::exists(filePath)) {
             std::filesystem::directory_entry path(filePath);

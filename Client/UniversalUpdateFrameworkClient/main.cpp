@@ -37,9 +37,9 @@ inline int handleArgument(int argc, char* argv[]) {
                 }
                 ApiRequest api(config.getConfig().host, config.getConfig().appName, config.getConfig().channel,
                                config.getConfig().platform);
-                auto [result1, appVersionContent] = updateToNewVersion.empty()
+                auto [result1, appVersionContent] = async_simple::coro::syncAwait((updateToNewVersion.empty()
                                                         ? api.GetCurrentAppVersion()
-                                                        : api.GetAppVersion(updateToNewVersion);
+                                                        : api.GetAppVersion(updateToNewVersion)));
                 if (!result1.getStatus()) {
                     std::cout << "Cannot connect to serevr!\n";
                     return -1;

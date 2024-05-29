@@ -19,16 +19,16 @@ public:
 
     }
 
-    ReturnWrapper execute() {
-        auto [result1, appVersionContent] = m_ApiRequest.GetAppVersion(m_NewVersion);
+    async_simple::coro::Lazy<ReturnWrapper> execute() {
+        auto [result1, appVersionContent] = co_await m_ApiRequest.GetAppVersion(m_NewVersion);
         if (!result1.getStatus()) {
-            return result1;
+            co_return result1;
         }
         AppVersionInfo appVersion = nlohmann::json::parse(appVersionContent);
 
-        auto [result2, appManifestContent] = m_ApiRequest.GetAppManifest(m_NewVersion);
+        auto [result2, appManifestContent] = co_await m_ApiRequest.GetAppManifest(m_NewVersion);
         if (!result2.getStatus()) {
-            return result2;
+            co_return result2;
         }
         AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
 
@@ -46,7 +46,7 @@ public:
             std::error_code ec;
             std::filesystem::create_directories(m_AppPath, ec);
             if (ec) {
-                return {false, ErrorCode::CreateAppDirFailed, ec.message()};
+                co_return ReturnWrapper {false, ErrorCode::CreateAppDirFailed, ec.message()};
             }
         }
 
@@ -85,7 +85,7 @@ public:
             std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
             if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
-                return {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
+                co_return ReturnWrapper {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
             }
         }
 
@@ -100,12 +100,12 @@ public:
                           << localMd5 << "\n";
 
                 if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
-                    return {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
+                    co_return ReturnWrapper {false, ErrorCode::DeleteFileFailed, "Delete File Failed! FilePath: "+localFilePath};
                 }
-                auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
+                auto [result, _] = co_await m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                             serverMd5, localFilePath);
                 if (!result.getStatus()) {
-                    return {false, ErrorCode::DownloadFileFailed, result.getErrorMessage()};
+                    co_return ReturnWrapper {false, ErrorCode::DownloadFileFailed, result.getErrorMessage()};
                 }
             }
         }
@@ -118,31 +118,31 @@ public:
                 std::error_code ec;
                 std::filesystem::create_directories(directory, ec);
                 if (ec) {
-                    return {false, ErrorCode::CreateDirFailed, ec.message()};
+                    co_return ReturnWrapper {false, ErrorCode::CreateDirFailed, ec.message()};
                 }
             }
 
             auto serverMd5 = serverMd5Map[file];
-            auto [result, _] = m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
+            auto [result, _] = co_await m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
                                                                         serverMd5, localFilePath.string());
             if (!result.getStatus()) {
-                return {false, ErrorCode::DownloadFileFailed, result.getErrorMessage()};
+                co_return ReturnWrapper {false, ErrorCode::DownloadFileFailed, result.getErrorMessage()};
             }
         }
 
         std::cout << "Start Verify...\n";
 
-        auto result = VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
+        auto result = co_await VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
         if (!result.getStatus()) {
-            return result;
+            co_return result;
         }
 
         if (!ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath)) {
-            return {false, ErrorCode::DeleteDownloadDirFailed,
+            co_return ReturnWrapper {false, ErrorCode::DeleteDownloadDirFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))};
         }
 
-        return {true};
+        co_return ReturnWrapper {true};
     }
 
 private:

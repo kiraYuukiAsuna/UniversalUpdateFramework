@@ -14,6 +14,7 @@ include_directories(
         ../../ThirdParty/asio-1.30.2/include
         ../../Generator/UniversalUpdateFrameworkGenerator/src
         ../../Common/processutil
+        ../../ThirdParty/cinatra/include
 )
 
 set(ProjectHeader
@@ -56,3 +57,8 @@ elseif (APPLE)
 endif ()
 
 add_executable(UniversalUpdateFrameworkClient ${ProjectHeader} ${ProjectSource})
+
+target_compile_options(UniversalUpdateFrameworkClient
+        PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+        $<$<CXX_COMPILER_ID:GNU>:-Wa,-mbig-obj>)

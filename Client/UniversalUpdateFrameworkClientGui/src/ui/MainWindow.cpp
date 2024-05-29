@@ -115,27 +115,32 @@ void MainWindow::refresh() {
 
     ui->LocalCurrentVersion->setText(QString::fromStdString(localCurrentVersion.getVersionString()));
 
-    if (auto [result, appVersionContent] = m_ApiRequest->GetCurrentAppVersion(); result.getStatus()) {
-        m_ServerCurrentAppVersion = AppVersionInfo(nlohmann::json::parse(appVersionContent));
-        auto serverCurrentVersion = Version{m_ServerCurrentAppVersion.AppVersion};
+    try {
+        if (auto [result, appVersionContent] = async_simple::coro::syncAwait(m_ApiRequest->GetCurrentAppVersion()); result.getStatus()) {
+            m_ServerCurrentAppVersion = AppVersionInfo(nlohmann::json::parse(appVersionContent));
+            auto serverCurrentVersion = Version{m_ServerCurrentAppVersion.AppVersion};
 
-        ui->ServerCurrentVersion->setText(
-            QString::fromStdString(m_ServerCurrentAppVersion.AppVersion));
+            ui->ServerCurrentVersion->setText(
+                QString::fromStdString(m_ServerCurrentAppVersion.AppVersion));
 
-        if (localCurrentVersion < serverCurrentVersion) {
-            ui->UpdateStatus->setText("New Version Available!");
-            if (auto [result, appManifestContent] = m_ApiRequest->GetCurrentAppManifest(); result.getStatus()) {
-                AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
-                ui->textEdit->setMarkdown(QString::fromStdString(appManifest.UpdateReadMe));
+            if (localCurrentVersion < serverCurrentVersion) {
+                ui->UpdateStatus->setText("New Version Available!");
+                if (auto [result, appManifestContent] = async_simple::coro::syncAwait(m_ApiRequest->GetCurrentAppManifest()); result.getStatus()) {
+                    AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
+                    ui->textEdit->setMarkdown(QString::fromStdString(appManifest.UpdateReadMe));
+                }
+            }
+            else {
+                ui->UpdateStatus->setText("No Update Available!");
+                ui->textEdit->setMarkdown(QString::fromStdString("# No Update Available!"));
             }
         }
         else {
-            ui->UpdateStatus->setText("No Update Available!");
-            ui->textEdit->setMarkdown(QString::fromStdString("# No Update Available!"));
+            QMessageBox::critical(this, "Error", QString::fromLocal8Bit(result.getErrorMessage()));
+            ui->UpdateStatus->setText("Network Error!");
         }
-    }
-    else {
-        QMessageBox::critical(this, "Error", QString::fromStdString(result.getErrorMessage()));
+    }catch (std::exception& e) {
+        QMessageBox::critical(this, "Error", e.what());
         ui->UpdateStatus->setText("Network Error!");
     }
 }

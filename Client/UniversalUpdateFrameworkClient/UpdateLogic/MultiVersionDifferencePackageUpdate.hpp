@@ -19,11 +19,11 @@ public:
 
     }
 
-    ReturnWrapper execute() {
+    async_simple::coro::Lazy<ReturnWrapper> execute() {
         // check versions number
-        auto [res, versionsContent] = m_ApiRequest.GetAppVersionList();
+        auto [res, versionsContent] = co_await m_ApiRequest.GetAppVersionList();
         if (!res.getStatus()) {
-            return {false, ErrorCode::HttpRequestError,
+            co_return ReturnWrapper {false, ErrorCode::HttpRequestError,
                     std::string(magic_enum::enum_name(ErrorCode::HttpRequestError))};
         }
 
@@ -39,9 +39,9 @@ public:
             std::cout << ver.getVersionString() << "\n";
         });
 
-        auto [res2, currentVersionContent] = m_ApiRequest.GetCurrentAppVersion();
+        auto [res2, currentVersionContent] = co_await m_ApiRequest.GetCurrentAppVersion();
         if (!res2.getStatus()) {
-            return {false, ErrorCode::HttpRequestError,
+            co_return ReturnWrapper {false, ErrorCode::HttpRequestError,
                     std::string(magic_enum::enum_name(ErrorCode::HttpRequestError))};
         }
 
@@ -57,7 +57,7 @@ public:
         }
         if (!bFindOldVersion) {
             // cannot find oldverion in server
-            return {false, ErrorCode::NoOldVersionOnServer,
+            co_return ReturnWrapper {false, ErrorCode::NoOldVersionOnServer,
                     std::string(magic_enum::enum_name(ErrorCode::NoOldVersionOnServer))};
         }
 
@@ -71,13 +71,13 @@ public:
         }
         if (!bFindCurrentVersion) {
             // cannot find currentversion in server
-            return {false, ErrorCode::NoNewVersionOnServer,
+            co_return ReturnWrapper {false, ErrorCode::NoNewVersionOnServer,
                     std::string(magic_enum::enum_name(ErrorCode::NoNewVersionOnServer))};
         }
 
         if (oldVersionIdx >= currentVersionIdx || oldVersionIdx == versions.size() - 1) {
             // current version is the newest version
-            return {false, ErrorCode::LocalVersionIsLatestVersion,
+            co_return ReturnWrapper {false, ErrorCode::LocalVersionIsLatestVersion,
                     std::string(magic_enum::enum_name(ErrorCode::LocalVersionIsLatestVersion))};
         }
 
@@ -89,13 +89,13 @@ public:
                                                             versions.at(startIdx + 1).getVersionString()
             );
 
-            auto res = differencePackageUpdate.execute();
+            auto res = co_await differencePackageUpdate.execute();
             if (!res.getStatus()) {
-                return res;
+                co_return res;
             }
         }
 
-        return {true};
+        co_return ReturnWrapper {true};
     }
 
 private:

@@ -22,23 +22,23 @@ public:
           m_NewVersion(std::move(newVersion)) {
     }
 
-    ReturnWrapper execute() {
-        auto [result1, appVersionContent] = m_ApiRequest.GetAppVersion(m_NewVersion);
+    async_simple::coro::Lazy<ReturnWrapper> execute() {
+        auto [result1, appVersionContent] = co_await m_ApiRequest.GetAppVersion(m_NewVersion);
         if (!result1.getStatus()) {
-            return result1;
+            co_return result1;
         }
         AppVersionInfo appVersion = nlohmann::json::parse(appVersionContent);
 
-        auto [result2, appManifestContent] = m_ApiRequest.GetAppManifest(m_NewVersion);
+        auto [result2, appManifestContent] = co_await m_ApiRequest.GetAppManifest(m_NewVersion);
         if (!result2.getStatus()) {
-            return result2;
+            co_return result2;
         }
         AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
 
-        auto [result3, appDifferencePackageManifestContent] = m_ApiRequest.GetAppDifferencePackageManifest(
+        auto [result3, appDifferencePackageManifestContent] = co_await m_ApiRequest.GetAppDifferencePackageManifest(
             m_NewVersion);
         if (!result3.getStatus()) {
-            return result3;
+            co_return result3;
         }
         DifferencePackageManifestInfo appDifferencePackageManifest = nlohmann::json::parse(appDifferencePackageManifestContent);
 
@@ -76,7 +76,7 @@ public:
             std::cout << "Delete File:" << file << "\n";
             auto localFilePath = m_AppPath + "/" + file;
             if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
-                return {
+                co_return ReturnWrapper {
                     false, ErrorCode::DeleteFileFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))
                 };
@@ -92,7 +92,7 @@ public:
             std::error_code ec;
             std::filesystem::create_directories(tempUpdatePath.parent_path(), ec);
             if (ec) {
-                return {
+                co_return ReturnWrapper {
                     false, ErrorCode::CreateAppDirFailed,
                     std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))
                 };
@@ -105,7 +105,7 @@ public:
             system(patchShellCommand.c_str());
 
             if (!ProcessUtil::DeleteFileRecursiveForce(localFilePath)) {
-                return {
+                co_return ReturnWrapper {
                     false, ErrorCode::DeleteFileFailed,
                     std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))
                 };
@@ -126,7 +126,7 @@ public:
             std::error_code ec;
             std::filesystem::create_directories(localFilePath.parent_path(), ec);
             if (ec) {
-                return {
+                co_return ReturnWrapper {
                     false, ErrorCode::CreateAppDirFailed,
                     std::string(magic_enum::enum_name(ErrorCode::CreateAppDirFailed))
                 };
@@ -135,26 +135,26 @@ public:
                                        std::filesystem::copy_options::overwrite_existing,
                                        ec);
             if (ec) {
-                return {
+                co_return ReturnWrapper {
                     false, ErrorCode::CopyFileFailed,
                     std::string(magic_enum::enum_name(ErrorCode::CopyFileFailed))
                 };
             }
         }
 
-        auto result = VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
+        auto result = co_await VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath);
         if (!result.getStatus()) {
-            return result;
+            co_return result;
         }
 
         if (!ProcessUtil::DeleteFileRecursiveForce(m_DownloadPath)) {
-            return {
+            co_return ReturnWrapper {
                 false, ErrorCode::DeleteDownloadDirFailed,
                 std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed))
             };
         }
 
-        return {true};
+        co_return ReturnWrapper{true};
     }
 
     ApiRequest& getApi() {

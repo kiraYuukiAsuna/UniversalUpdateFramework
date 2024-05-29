@@ -23,6 +23,7 @@ include_directories(
         ../UniversalUpdateFrameworkClient
         ../../Generator/UniversalUpdateFrameworkGenerator/src
         ../../Common/processutil
+        ../../ThirdParty/cinatra/include
 )
 
 link_directories(
@@ -58,8 +59,8 @@ set(PROJECT_SOURCES
 )
 
 if (WIN32)
-    set(ProjectSource
-            ${ProjectSource}
+    set(PROJECT_SOURCES
+            ${PROJECT_SOURCES}
             app_win32.rc
             ../../Common/processutil/Windows/NtdllBase.cpp
             ../../Common/processutil/Windows/NtdllExtensions.cpp
@@ -82,8 +83,8 @@ target_link_libraries(${PROJECT_NAME}
 if (WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS
-            "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
+#    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS
+#            "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
 elseif (UNIX)
 
 elseif (APPLE)
