@@ -8,10 +8,10 @@
 #include "md5.h"
 #include <format>
 #include "FilePermission.hpp"
-#include "src/AppVersion.hpp"
-#include "src/UpdatePackageBuild.hpp"
-#include "src/AppManifest.hpp"
-#include "src/FullPackageManifest.hpp"
+#include "AppVersion.hpp"
+#include "UpdatePackageBuild.hpp"
+#include "AppManifest.hpp"
+#include "FullPackageManifest.hpp"
 
 inline bool generateFullPackageAppVersionFile(std::filesystem::path appversionFolder, UpdatePackageBuildInfo info) {
     std::filesystem::path appverionFilePath = appversionFolder / "appversion.json";

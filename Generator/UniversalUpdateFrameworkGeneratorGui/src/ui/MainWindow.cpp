@@ -1,13 +1,13 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-#include "src/Defination.hpp"
-#include "src/GeneratorAppEntry.h"
+#include "GeneratorAppEntry.h"
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QMessageBox>
 
-MainWindow::MainWindow(QWidget *parent) :
-        QMainWindow(parent), ui(new Ui::MainWindow) {
+#include "UpdaterVersionConfigGenerator.h"
+
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
     ui->GenerationMode->addItem("FullPackage");
@@ -17,7 +17,8 @@ MainWindow::MainWindow(QWidget *parent) :
         QFileDialog dialog(this);
         dialog.setFileMode(QFileDialog::Directory);
         auto selectedPath = dialog.getExistingDirectory(this, "Select Old Version Path", QStandardPaths::displayName(
-                QStandardPaths::StandardLocation::HomeLocation), QFileDialog::Option::ShowDirsOnly);
+                                                            QStandardPaths::StandardLocation::HomeLocation),
+                                                        QFileDialog::Option::ShowDirsOnly);
 
         ui->OldVersionPath->setText(selectedPath);
     });
@@ -26,9 +27,15 @@ MainWindow::MainWindow(QWidget *parent) :
         QFileDialog dialog(this);
         dialog.setFileMode(QFileDialog::Directory);
         auto selectedPath = dialog.getExistingDirectory(this, "Select New Version Path", QStandardPaths::displayName(
-                QStandardPaths::StandardLocation::HomeLocation), QFileDialog::Option::ShowDirsOnly);
+                                                            QStandardPaths::StandardLocation::HomeLocation),
+                                                        QFileDialog::Option::ShowDirsOnly);
 
         ui->NewVersionPath->setText(selectedPath);
+    });
+
+    connect(ui->GenerateUpdaterVersionConfigBtn, &QPushButton::clicked, this, [&]() {
+        UpdaterVersionConfigGenerator updaterVersionConfigGenerator;
+        updaterVersionConfigGenerator.exec();
     });
 
     connect(ui->CreateAppPackage, &QPushButton::clicked, this, [&]() {
@@ -73,22 +80,23 @@ MainWindow::MainWindow(QWidget *parent) :
             packageBuildInfo.AppCurrentVersion = ui->AppVersion->text().toStdString();
             packageBuildInfo.UpdateReadMe = ui->textEdit->toMarkdown().toStdString();
 
-//            packageBuildInfo.PackageMode = "DifferencePackage";
-//            packageBuildInfo.newPath = R"(D:\WorkSpace\UnrealEngine\1.1.0)";
-//            packageBuildInfo.appname = "TestApplication";
-//            packageBuildInfo.channel = "Release";
-//            packageBuildInfo.platform = "Win";
-//            packageBuildInfo.appversion = "1.1.0";
+            //            packageBuildInfo.PackageMode = "DifferencePackage";
+            //            packageBuildInfo.newPath = R"(D:\WorkSpace\UnrealEngine\1.1.0)";
+            //            packageBuildInfo.appname = "TestApplication";
+            //            packageBuildInfo.channel = "Release";
+            //            packageBuildInfo.platform = "Win";
+            //            packageBuildInfo.appversion = "1.1.0";
 
             if (generateFullPackage(packageBuildInfo) != 0) {
                 QMessageBox::critical(this, "Error", "Generate FullPackage Failed!");
                 return;
-            } else {
+            }
+            else {
                 QMessageBox::information(this, "Info", "Generate FullPackage Successfully!");
                 return;
             }
-
-        } else if (ui->GenerationMode->currentIndex() == 1) {
+        }
+        else if (ui->GenerationMode->currentIndex() == 1) {
             if (ui->OldVersionPath->text().isEmpty()) {
                 QMessageBox::critical(this, "Error", "You need to select Old version path!");
                 return;
@@ -136,24 +144,24 @@ MainWindow::MainWindow(QWidget *parent) :
             packageBuildInfo.AppCurrentVersion = ui->AppVersion->text().toStdString();
             packageBuildInfo.AppBeforeVersion = ui->OldAppVersion->text().toStdString();
 
-//            packageBuildInfo.PackageMode = "DifferencePackage";
-//            packageBuildInfo.oldPath = R"(C:/Users/KiraY/Desktop/UniversalUpdateFramework/Generator/UniversalUpdateFrameworkGeneratorGui/cmake-build-debug/TestApplication/Release/Win/1.0.0/fullpackage)";
-//            packageBuildInfo.newPath = R"(C:/Users/KiraY/Desktop/UniversalUpdateFramework/Generator/UniversalUpdateFrameworkGeneratorGui/cmake-build-debug/TestApplication/Release/Win/1.1.0/fullpackage)";
-//            packageBuildInfo.appname = "TestApplication";
-//            packageBuildInfo.channel = "Release";
-//            packageBuildInfo.platform = "Win";
-//            packageBuildInfo.appversion = "1.1.0";
-//            packageBuildInfo.appbeforeversion = "1.0.0";
+            //            packageBuildInfo.PackageMode = "DifferencePackage";
+            //            packageBuildInfo.oldPath = R"(C:/Users/KiraY/Desktop/UniversalUpdateFramework/Generator/UniversalUpdateFrameworkGeneratorGui/cmake-build-debug/TestApplication/Release/Win/1.0.0/fullpackage)";
+            //            packageBuildInfo.newPath = R"(C:/Users/KiraY/Desktop/UniversalUpdateFramework/Generator/UniversalUpdateFrameworkGeneratorGui/cmake-build-debug/TestApplication/Release/Win/1.1.0/fullpackage)";
+            //            packageBuildInfo.appname = "TestApplication";
+            //            packageBuildInfo.channel = "Release";
+            //            packageBuildInfo.platform = "Win";
+            //            packageBuildInfo.appversion = "1.1.0";
+            //            packageBuildInfo.appbeforeversion = "1.0.0";
 
             if (generateDifferencePackage(packageBuildInfo) != 0) {
                 QMessageBox::critical(this, "Error", "Generate DifferencePackage Failed!");
                 return;
-            } else {
+            }
+            else {
                 QMessageBox::information(this, "Info", "Generate DifferencePackage Successfully!");
                 return;
             }
         }
-
     });
 }
 

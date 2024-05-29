@@ -1,6 +1,7 @@
 using System.Net;
 using System.Runtime.InteropServices.JavaScript;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -20,7 +21,7 @@ public class UpdaterUpdateSelfController : ControllerBase
     {
         _logger = logger;
 
-        m_UpdaterUpdateSelfDataManager = new UpdaterUpdateSelfDataManager("appdata");
+        m_UpdaterUpdateSelfDataManager = new UpdaterUpdateSelfDataManager("updaterdata");
     }
 
     [HttpGet("GetCurrentUpdaterVersion")]
@@ -29,7 +30,7 @@ public class UpdaterUpdateSelfController : ControllerBase
         try
         {
             var currentVersionString = m_UpdaterUpdateSelfDataManager.GetCurrentData(updaterName, channel, platform);
-            JsonDocument jsonDocument = JsonDocument.Parse(currentVersionString);
+            JsonDocument jsonDocument = JsonDocument.Parse("{\"version\":\"" + currentVersionString + "\"}");
             JsonElement rootElement = jsonDocument.RootElement;
 
             return new JsonResult(rootElement);
@@ -59,16 +60,54 @@ public class UpdaterUpdateSelfController : ControllerBase
     }
     
     [HttpGet("DownloadCurrentUpdaterInstaller")]
-    public JsonResult DownloadCurrentUpdaterInstaller(string updaterName, string updaterVersion, string channel, string platform)
+    public async Task<IActionResult> DownloadCurrentUpdaterInstaller(string updaterName, string channel, string platform)
     {
         try
         {
-            var jObject = m_UpdaterUpdateSelfDataManager.GetData(updaterName, updaterVersion, channel, platform);
-            string jsonString = jObject.ToString();
-            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
-            JsonElement rootElement = jsonDocument.RootElement;
+            var updaterVersion = m_UpdaterUpdateSelfDataManager.GetCurrentData(updaterName, channel, platform);
 
-            return new JsonResult(rootElement);
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_installer");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
+
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            var range = Request.Headers["Range"].ToString();
+            if (!string.IsNullOrEmpty(range))
+            {
+                var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+                var start = long.Parse(match.Groups[1].Value);
+                var end = string.IsNullOrEmpty(match.Groups[2].Value)
+                    ? contentLength - 1
+                    : long.Parse(match.Groups[2].Value);
+                contentLength = end - start + 1;
+                fileStream.Seek(start, SeekOrigin.Begin);
+                Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+                Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            }
+
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.ContentType = contentType;
+            Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            await fileStream.CopyToAsync(Response.Body);
+            return new EmptyResult();
         }
         catch (Exception ex)
         {
@@ -77,16 +116,52 @@ public class UpdaterUpdateSelfController : ControllerBase
     }
     
     [HttpGet("DownloadUpdaterInstaller")]
-    public JsonResult DownloadUpdaterInstaller(string updaterName, string updaterVersion, string channel, string platform)
+    public async Task<IActionResult> DownloadUpdaterInstaller(string updaterName, string updaterVersion, string channel, string platform)
     {
         try
         {
-            var jObject = m_UpdaterUpdateSelfDataManager.GetData(updaterName, updaterVersion, channel, platform);
-            string jsonString = jObject.ToString();
-            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
-            JsonElement rootElement = jsonDocument.RootElement;
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_installer");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+            
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
 
-            return new JsonResult(rootElement);
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            var range = Request.Headers["Range"].ToString();
+            if (!string.IsNullOrEmpty(range))
+            {
+                var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+                var start = long.Parse(match.Groups[1].Value);
+                var end = string.IsNullOrEmpty(match.Groups[2].Value)
+                    ? contentLength - 1
+                    : long.Parse(match.Groups[2].Value);
+                contentLength = end - start + 1;
+                fileStream.Seek(start, SeekOrigin.Begin);
+                Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+                Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            }
+
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.ContentType = contentType;
+            Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            await fileStream.CopyToAsync(Response.Body);
+            return new EmptyResult();
         }
         catch (Exception ex)
         {
@@ -95,16 +170,54 @@ public class UpdaterUpdateSelfController : ControllerBase
     }
     
     [HttpGet("DownloadCurrentUpdaterZipFile")]
-    public JsonResult DownloadCurrentUpdaterZipFile(string updaterName, string updaterVersion, string channel, string platform)
+    public async Task<IActionResult> DownloadCurrentUpdaterZipFile(string updaterName, string channel, string platform)
     {
         try
         {
-            var jObject = m_UpdaterUpdateSelfDataManager.GetData(updaterName, updaterVersion, channel, platform);
-            string jsonString = jObject.ToString();
-            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
-            JsonElement rootElement = jsonDocument.RootElement;
+            var updaterVersion = m_UpdaterUpdateSelfDataManager.GetCurrentData(updaterName, channel, platform);
+            
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_zip");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+            
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
 
-            return new JsonResult(rootElement);
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            var range = Request.Headers["Range"].ToString();
+            if (!string.IsNullOrEmpty(range))
+            {
+                var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+                var start = long.Parse(match.Groups[1].Value);
+                var end = string.IsNullOrEmpty(match.Groups[2].Value)
+                    ? contentLength - 1
+                    : long.Parse(match.Groups[2].Value);
+                contentLength = end - start + 1;
+                fileStream.Seek(start, SeekOrigin.Begin);
+                Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+                Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            }
+
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.ContentType = contentType;
+            Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            await fileStream.CopyToAsync(Response.Body);
+            return new EmptyResult();
         }
         catch (Exception ex)
         {
@@ -113,16 +226,52 @@ public class UpdaterUpdateSelfController : ControllerBase
     }
     
     [HttpGet("DownloadUpdaterZipFile")]
-    public JsonResult DownloadUpdaterZipFile(string updaterName, string updaterVersion, string channel, string platform)
+    public async Task<IActionResult> DownloadUpdaterZipFile(string updaterName, string updaterVersion, string channel, string platform)
     {
         try
         {
-            var jObject = m_UpdaterUpdateSelfDataManager.GetData(updaterName, updaterVersion, channel, platform);
-            string jsonString = jObject.ToString();
-            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
-            JsonElement rootElement = jsonDocument.RootElement;
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_zip");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+            
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
 
-            return new JsonResult(rootElement);
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            var range = Request.Headers["Range"].ToString();
+            if (!string.IsNullOrEmpty(range))
+            {
+                var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+                var start = long.Parse(match.Groups[1].Value);
+                var end = string.IsNullOrEmpty(match.Groups[2].Value)
+                    ? contentLength - 1
+                    : long.Parse(match.Groups[2].Value);
+                contentLength = end - start + 1;
+                fileStream.Seek(start, SeekOrigin.Begin);
+                Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+                Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            }
+
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.ContentType = contentType;
+            Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            await fileStream.CopyToAsync(Response.Body);
+            return new EmptyResult();
         }
         catch (Exception ex)
         {
@@ -131,16 +280,50 @@ public class UpdaterUpdateSelfController : ControllerBase
     }
     
     [HttpGet("DownloadUpdaterFile")]
-    public JsonResult DownloadUpdaterFile(string updaterName, string updaterVersion, string channel, string platform)
+    public async Task<IActionResult> DownloadUpdaterFile(string updaterName, string updaterVersion, string channel, string platform, string md5)
     {
         try
         {
-            var jObject = m_UpdaterUpdateSelfDataManager.GetData(updaterName, updaterVersion, channel, platform);
-            string jsonString = jObject.ToString();
-            JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
-            JsonElement rootElement = jsonDocument.RootElement;
+            var downloadFileInfo =
+                m_UpdaterUpdateSelfDataManager.GetFile(updaterName, updaterVersion, channel, platform, md5);
 
-            return new JsonResult(rootElement);
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
+
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            var range = Request.Headers["Range"].ToString();
+            if (!string.IsNullOrEmpty(range))
+            {
+                var match = Regex.Match(range, @"bytes=(\d*)-(\d*)");
+                var start = long.Parse(match.Groups[1].Value);
+                var end = string.IsNullOrEmpty(match.Groups[2].Value)
+                    ? contentLength - 1
+                    : long.Parse(match.Groups[2].Value);
+                contentLength = end - start + 1;
+                fileStream.Seek(start, SeekOrigin.Begin);
+                Response.Headers.Add("Content-Range", $"bytes {start}-{end}/{fileInfo.Length}");
+                Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            }
+
+            Response.Headers.Add("Accept-Ranges", "bytes");
+            Response.ContentType = contentType;
+            Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            await fileStream.CopyToAsync(Response.Body);
+            return new EmptyResult();
         }
         catch (Exception ex)
         {

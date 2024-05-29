@@ -1,4 +1,5 @@
 #include "UpdateLogic/UpdateClientAppEntry.hpp"
+#include "cxxopts.hpp"
 
 inline int handleArgument(int argc, char* argv[]) {
     try {

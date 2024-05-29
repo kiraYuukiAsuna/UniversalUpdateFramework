@@ -20,7 +20,7 @@ include_directories(
         ../../ThirdParty/cxxopts
         ../../Common/util
         ../../Common/md5
-        ../UniversalUpdateFrameworkGenerator
+        ../UniversalUpdateFrameworkGenerator/src
 )
 
 link_directories(

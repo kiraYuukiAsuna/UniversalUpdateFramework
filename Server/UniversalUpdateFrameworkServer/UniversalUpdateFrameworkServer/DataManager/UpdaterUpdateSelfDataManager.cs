@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UniversalUpdateFrameworkServer.Definition;
 
 namespace UniversalUpdateFrameworkServer.DataManager;
 
@@ -72,4 +74,34 @@ public class UpdaterUpdateSelfDataManager(string updaterDataFolderPath)
             return File.ReadAllText(versionconfigJsonFilePath);
         }
     }
+    
+    public DownloadFileInfo GetFile(string updaterName, string updaterVersion, string channel,
+        string platform, string md5)
+    {
+        var versionconfigJsonFilePath = Path.Combine(getUpdaterFolderPath(updaterName), channel, platform,
+            "versionconfig.json");
+        string jsonContent = File.ReadAllText(versionconfigJsonFilePath);
+        var versionConfig = JsonConvert.DeserializeObject<AppVersionConfigInfo>(jsonContent);
+
+        string relativePath = "";
+        foreach (var version in versionConfig.Versions)
+        {
+            foreach (var manifest in version.FileManifests)
+            {
+                if (manifest.Md5 == md5)
+                {
+                    relativePath = manifest.FilePath;
+                }
+            }
+        }
+
+        DownloadFileInfo info;
+        info.filePath = Path.Combine(getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "fullpackage",
+            relativePath);
+        info.md5 = md5;
+        info.version = updaterVersion;
+
+        return info;
+    }
+    
 }
