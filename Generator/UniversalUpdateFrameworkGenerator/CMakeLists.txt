@@ -9,6 +9,7 @@ include_directories(
         ../../ThirdParty/httplib
         ../../ThirdParty/cxxopts
         ../../Common/md5
+        ../../Common/util
 )
 
 set(ProjectHeader

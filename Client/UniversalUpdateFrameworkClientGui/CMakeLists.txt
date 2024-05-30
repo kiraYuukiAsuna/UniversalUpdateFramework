@@ -87,7 +87,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if (WIN32)
-#    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")
 
 #    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS
 #            "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")

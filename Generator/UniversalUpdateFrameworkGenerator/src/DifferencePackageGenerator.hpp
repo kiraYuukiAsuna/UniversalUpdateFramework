@@ -76,7 +76,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
     std::cout << "Same elements (Update): ";
     for (const auto&element: same_elements) {
         std::cout << element << "\n";
-        differencePackageManifestInfo.diff_updatefiles.push_back(element);
+        differencePackageManifestInfo.diff_updatefiles.push_back(util::subreplace(element, "\\", "/"));
 
         std::filesystem::path oldPath = std::filesystem::path(info.OldVersionPath) / element;
         std::filesystem::path newPath = std::filesystem::path(info.NewVersionPath) / element;
@@ -99,7 +99,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
     std::cout << "New elements in newFiles: ";
     for (const auto&element: new_elements) {
         std::cout << element << "\n";
-        differencePackageManifestInfo.diff_newfiles.push_back(element);
+        differencePackageManifestInfo.diff_newfiles.push_back(util::subreplace(element, "\\", "/"));
 
         std::filesystem::path from = std::filesystem::path(info.NewVersionPath) / element;
         std::filesystem::path to = differencepackageFolderPath / element;
@@ -115,7 +115,7 @@ inline bool generateDifferencePackageManifestFile(std::filesystem::path appversi
     std::cout << "Deleted elements in newFiles: ";
     for (const auto&element: deleted_elements) {
         std::cout << element << "\n";
-        differencePackageManifestInfo.diff_deletedfiles.push_back(element);
+        differencePackageManifestInfo.diff_deletedfiles.push_back(util::subreplace(element, "\\", "/"));
     }
     std::cout << std::endl;
 

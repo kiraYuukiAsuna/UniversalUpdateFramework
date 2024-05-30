@@ -15,6 +15,15 @@ namespace util {
         return tokens;
     }
 
+    inline std::string subreplace(std::string resource_str, std::string sub_str, std::string new_str) {
+        std::string::size_type pos = 0;
+        while ((pos = resource_str.find(sub_str)) != std::string::npos) //替换所有指定子串
+        {
+            resource_str.replace(pos, sub_str.length(), new_str);
+        }
+        return resource_str;
+    }
+
     inline bool saveToFile(const std::string&content, std::filesystem::path path) {
         std::ofstream outfile(path);
         if (!outfile.is_open()) {

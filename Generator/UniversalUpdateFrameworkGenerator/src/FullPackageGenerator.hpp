@@ -12,6 +12,7 @@
 #include "UpdatePackageBuild.hpp"
 #include "AppManifest.hpp"
 #include "FullPackageManifest.hpp"
+#include "util.hpp"
 
 inline bool generateFullPackageAppVersionFile(std::filesystem::path appversionFolder, UpdatePackageBuildInfo info) {
     std::filesystem::path appverionFilePath = appversionFolder / "appversion.json";
@@ -55,7 +56,7 @@ inline bool generateFullPackageAppManifestFile(std::filesystem::path appversionF
             auto relativePath = std::filesystem::relative(directoryEntry.path(), std::filesystem::path(info.NewVersionPath));
             FileManifestInfo manifest;
             manifest.FileName = relativePath.filename().string();
-            manifest.FilePath = relativePath.string();
+            manifest.FilePath = util::subreplace(relativePath.string(), "\\", "/");
             manifest.Md5 = calcFileMd5(directoryEntry.path().string());
 
             FilePermission filePermission(directoryEntry.path());

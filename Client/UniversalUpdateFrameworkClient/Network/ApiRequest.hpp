@@ -77,8 +77,8 @@ public:
             .DownloadCurrentSize = 0
         });
 
-        // Download the file in chunks of 100MB
-        const size_t chunk_size = 100 * 1024 * 1024; // 100MB
+        // Download the file in chunks of 10MB
+        const size_t chunk_size = 10 * 1024 * 1024;
         for (size_t start = 0; start < bytes_total; start += chunk_size) {
             size_t end = std::min(start + chunk_size - 1, bytes_total - 1);
             SEELE_INFO_TAG(__func__, "{}",
