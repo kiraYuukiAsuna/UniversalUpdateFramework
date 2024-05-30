@@ -84,7 +84,7 @@ public:
             .status = UpdateStatus::DownloadDifferencePackageFile,
         });
         auto [resultx, _] = co_await m_ApiRequest.DownloadDifferencePackage(
-            m_NewVersion, differencePackageFile.string());
+            m_NewVersion, differencePackageFile.string(), updateStatusCallback);
         if (!resultx.getStatus()) {
             co_return resultx;
         }

@@ -151,7 +151,7 @@ public:
                     // };
                 }
                 auto [result, _] = co_await m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
-                    serverMd5, localFilePath);
+                    serverMd5, localFilePath, updateStatusCallback);
                 if (!result.getStatus()) {
                     updateStatusCallback(UpdateStatusInfo{
                         .status = UpdateStatus::Failed,
@@ -187,7 +187,7 @@ public:
 
             auto serverMd5 = serverMd5Map[file];
             auto [result, _] = co_await m_ApiRequest.DownloadFileFromFullPackage(appVersion.AppVersion,
-                serverMd5, localFilePath.string());
+                serverMd5, localFilePath.string(), updateStatusCallback);
             if (!result.getStatus()) {
                 updateStatusCallback(UpdateStatusInfo{
                     .status = UpdateStatus::Failed,

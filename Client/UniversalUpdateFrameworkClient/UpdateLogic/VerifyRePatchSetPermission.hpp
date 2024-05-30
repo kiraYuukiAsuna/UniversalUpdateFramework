@@ -53,7 +53,7 @@ public:
                 SEELE_INFO_TAG(__func__, "Not exist! Download: {}", fileManifest.FilePath);
 
                 auto [result, _] = co_await api.DownloadFileFromFullPackage(appVersion.AppVersion,
-                                                                            fileManifest.Md5, localFilePath);
+                                                                            fileManifest.Md5, localFilePath, updateStatusCallback);
                 if (!result.getStatus()) {
                     ReturnWrapper ret{
                         false, ErrorCode::DownloadFileFailed,
@@ -87,7 +87,7 @@ public:
                     co_return ret;
                 }
                 auto [result, _] = co_await api.DownloadFileFromFullPackage(appVersion.AppVersion,
-                                                                            fileManifest.Md5, localFilePath);
+                                                                            fileManifest.Md5, localFilePath, updateStatusCallback);
                 if (!result.getStatus()) {
                     ReturnWrapper ret{
                         false, ErrorCode::DownloadFileFailed,

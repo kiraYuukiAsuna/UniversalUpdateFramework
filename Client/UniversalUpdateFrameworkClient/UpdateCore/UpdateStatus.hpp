@@ -38,8 +38,8 @@ struct UpdateStatusInfo {
     std::string CurrentFileName;
     float CurerentProgress;
 
-    float DownloadTotalSize;
-    float DownloadCurrentSize;
+    int DownloadTotalSize;
+    int DownloadCurrentSize;
     float DownloadCurrentSpeed;
 
     std::string WarningMessage;

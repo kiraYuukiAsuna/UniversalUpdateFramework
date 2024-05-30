@@ -80,6 +80,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         updateConfigIo.readFromFile();
 
         ui->UpdateProgressBar->setValue(0);
+        ui->DownloadFileProgress->setValue(0);
         ui->UpdateLog->clear();
 
         this->setEnabled(false);
@@ -252,6 +253,8 @@ void MainWindow::handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo) {
             }
             case UpdateStatus::DownloadingFile: {
                 ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
+                ui->DownloadFileProgress->setValue(int((float)updateStatusInfo.DownloadCurrentSize / updateStatusInfo.DownloadTotalSize * 100));
+                ui->DownloadFileSizeProgress->setText(QString::fromStdString(std::to_string(updateStatusInfo.DownloadCurrentSize / 1024 / 1024) + " / " + std::to_string(updateStatusInfo.DownloadTotalSize/ 1024 / 1024) + " MB"));
                 break;
             }
             case UpdateStatus::CopyingFile: {
@@ -281,11 +284,13 @@ void MainWindow::handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo) {
                 this->setEnabled(true);
                 if (future.getStatus()) {
                     ui->UpdateProgressBar->setValue(100);
+                    ui->DownloadFileProgress->setValue(100);
                     progress = 100;
                     QMessageBox::information(this, "Info", "Update finished!");
                 }
                 else {
                     ui->UpdateProgressBar->setValue(0);
+                    ui->DownloadFileProgress->setValue(0);
                     progress = 0;
                     QMessageBox::critical(this, "Info",
                                           "Update failed!" + QString::fromStdString(future.getErrorMessage()));
@@ -297,6 +302,7 @@ void MainWindow::handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo) {
                 ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.ErrorMessage));
                 this->setEnabled(true);
                 ui->UpdateProgressBar->setValue(0);
+                ui->DownloadFileProgress->setValue(0);
                 QMessageBox::critical(this, "Info",
                                       "Update failed!" + QString::fromStdString(updateStatusInfo.ErrorMessage));
                 break;

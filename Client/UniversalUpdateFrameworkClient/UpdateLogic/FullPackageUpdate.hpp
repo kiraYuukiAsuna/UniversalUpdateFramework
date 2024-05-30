@@ -83,8 +83,8 @@ public:
             .status = UpdateStatus::DownloadFullPackageFile,
         });
         auto [resultx, _] = co_await (m_NewVersion.empty()
-                                          ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string())
-                                          : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string()));
+                                          ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string(), updateStatusCallback)
+                                          : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string(), updateStatusCallback));
         if (!resultx.getStatus()) {
             co_return resultx;
         }
