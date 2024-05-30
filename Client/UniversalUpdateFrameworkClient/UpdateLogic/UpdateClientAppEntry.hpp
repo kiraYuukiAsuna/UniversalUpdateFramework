@@ -15,6 +15,7 @@ inline ReturnWrapper handleUpdateMode(UpdateMode mode, UpdateConfigIo config, st
     switch (mode) {
         case UpdateMode::Unknown: {
             SEELE_INFO_TAG(__func__, "{}", "Unknown update mode!");
+            updateStatusCallback({UpdateStatus::Failed, "Unknown update mode!"});
             return {false};
         }
         case UpdateMode::FullPackageUpdate: {
@@ -34,13 +35,16 @@ inline ReturnWrapper handleUpdateMode(UpdateMode mode, UpdateConfigIo config, st
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                updateStatusCallback({UpdateStatus::Completed});
                 return res;
             }
+            updateStatusCallback({UpdateStatus::Failed, res.getErrorMessage()});
             return res;
         }
         case UpdateMode::DifferencePackageUpdate: {
             if (config.getConfig().localCurrentVersion == "x.x.x") {
                 SEELE_INFO_TAG(__func__, "{}", "Invalid local current version!");
+                updateStatusCallback({UpdateStatus::Failed, "Invalid local current version!"});
                 return {false};
             }
 
@@ -61,13 +65,16 @@ inline ReturnWrapper handleUpdateMode(UpdateMode mode, UpdateConfigIo config, st
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                updateStatusCallback({UpdateStatus::Completed});
                 return res;
             }
+            updateStatusCallback({UpdateStatus::Failed, res.getErrorMessage()});
             return res;
         }
         case UpdateMode::MultiVersionDifferencePackageUpdate: {
             if (config.getConfig().localCurrentVersion == "x.x.x") {
                 SEELE_INFO_TAG(__func__, "{}", "Invaid local current version!");
+                updateStatusCallback({UpdateStatus::Failed, "Invaid local current version!"});
                 return {false};
             }
 
@@ -88,8 +95,10 @@ inline ReturnWrapper handleUpdateMode(UpdateMode mode, UpdateConfigIo config, st
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                updateStatusCallback({UpdateStatus::Completed});
                 return res;
             }
+            updateStatusCallback({UpdateStatus::Failed, res.getErrorMessage()});
             return res;
         }
         case UpdateMode::DifferenceUpdate: {
@@ -109,8 +118,10 @@ inline ReturnWrapper handleUpdateMode(UpdateMode mode, UpdateConfigIo config, st
                 cfg.localCurrentVersion = updateToNewVersion;
                 config.setConfig(cfg);
                 config.writeToFile();
+                updateStatusCallback({UpdateStatus::Completed});
                 return res;
             }
+            updateStatusCallback({UpdateStatus::Failed, res.getErrorMessage()});
             return res;
         }
     }

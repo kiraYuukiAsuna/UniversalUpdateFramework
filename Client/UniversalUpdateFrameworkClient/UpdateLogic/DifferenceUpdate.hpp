@@ -218,9 +218,6 @@ public:
                 m_DownloadPath
             };
         }
-        updateStatusCallback(UpdateStatusInfo{
-            .status = UpdateStatus::Completed
-        });
         co_return ReturnWrapper{true};
     }
 

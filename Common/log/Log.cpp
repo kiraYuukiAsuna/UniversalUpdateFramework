@@ -2,6 +2,7 @@
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "EditorConsoleSink.h"
 #include <filesystem>
 
@@ -32,7 +33,7 @@ namespace Seele {
 
         std::vector<spdlog::sink_ptr> coreSinks =
         {
-            std::make_shared<spdlog::sinks::basic_file_sink_mt>(coreLogsFile, truncate),
+            std::make_shared<spdlog::sinks::rotating_file_sink_mt>(coreLogsFile, 1024*1024*10, 3),
         };
         if (m_HasConsole) {
             coreSinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
@@ -40,7 +41,7 @@ namespace Seele {
 
         std::vector<spdlog::sink_ptr> appSinks =
         {
-            std::make_shared<spdlog::sinks::basic_file_sink_mt>(appLogsFile, truncate),
+            std::make_shared<spdlog::sinks::rotating_file_sink_mt>(appLogsFile, 1024*1024*10, 3),
         };
         if (m_HasConsole) {
             appSinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
@@ -48,7 +49,7 @@ namespace Seele {
 
         std::vector<spdlog::sink_ptr> editorConsoleSinks =
         {
-            std::make_shared<spdlog::sinks::basic_file_sink_mt>(editorConsoleLogsFile, truncate),
+            std::make_shared<spdlog::sinks::rotating_file_sink_mt>(editorConsoleLogsFile, 1024*1024*10, 3),
         };
         if (m_HasConsole) {
             editorConsoleSinks.push_back(std::make_shared<EditorConsoleSink>(1));

@@ -132,9 +132,6 @@ public:
                 co_return diffUpdateResult;
             }
         }
-        updateStatusCallback(UpdateStatusInfo{
-            .status = UpdateStatus::Completed
-        });
         co_return ReturnWrapper{true};
     }
 

@@ -160,9 +160,6 @@ public:
                 std::string(magic_enum::enum_name(ErrorCode::DeleteDownloadDirFailed)) + " File:" + m_DownloadPath
             };
         }
-        updateStatusCallback(UpdateStatusInfo{
-            .status = UpdateStatus::Completed
-        });
         co_return ReturnWrapper{true};
     }
 

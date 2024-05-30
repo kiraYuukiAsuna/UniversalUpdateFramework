@@ -98,13 +98,40 @@ public class AppDifferencePackageController : ControllerBase
             Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
             Response.Headers.Add("Content-Length", contentLength.ToString());
             await fileStream.CopyToAsync(Response.Body);
-            return new EmptyResult();
+            return new FileStreamResult(fileStream, contentType);
         }catch(Exception ex)
         {
             return new JsonResult(ex.ToString());
         }
     }
 
+    [HttpHead("DownloadCurrentDifferencePackage")]
+    public IActionResult DownloadCurrentDifferencePackageHead(string appname, string channel, string platform)
+    {
+        try
+        {
+            var fullPackageFileInfo =
+                m_AppDifferencePackageDataManager.GetCurrentDifferencePackageFilePath(appname, channel, platform);
+            var fileFullPath = fullPackageFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            return Ok();
+        }catch(Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
     [HttpGet("DownloadDifferencePackage")]
     public async Task<IActionResult> DownloadDifferencePackage(string appname, string appversion, string channel,
         string platform)
@@ -144,7 +171,35 @@ public class AppDifferencePackageController : ControllerBase
             Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
             Response.Headers.Add("Content-Length", contentLength.ToString());
             await fileStream.CopyToAsync(Response.Body);
-            return new EmptyResult();
+            return new FileStreamResult(fileStream, contentType);
+        }catch(Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+     [HttpHead("DownloadDifferencePackage")]
+    public async Task<IActionResult> DownloadDifferencePackageHead(string appname, string appversion, string channel,
+        string platform)
+    {
+        try
+        {
+            var fullPackageFileInfo =
+                m_AppDifferencePackageDataManager.getDifferencePackageFilePath(appname, appversion, channel, platform);
+            var fileFullPath = fullPackageFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            return Ok();
         }catch(Exception ex)
         {
             return new JsonResult(ex.ToString());

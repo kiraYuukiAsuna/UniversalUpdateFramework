@@ -107,7 +107,45 @@ public class UpdaterUpdateSelfController : ControllerBase
             Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
             Response.Headers.Add("Content-Length", contentLength.ToString());
             await fileStream.CopyToAsync(Response.Body);
-            return new EmptyResult();
+            return new FileStreamResult(fileStream, contentType);
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+    [HttpHead("DownloadCurrentUpdaterInstaller")]
+    public async Task<IActionResult> DownloadCurrentUpdaterInstallerHead(string updaterName, string channel, string platform)
+    {
+        try
+        {
+            var updaterVersion = m_UpdaterUpdateSelfDataManager.GetCurrentData(updaterName, channel, platform);
+
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_installer");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
+
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            return Ok();
         }
         catch (Exception ex)
         {
@@ -161,7 +199,43 @@ public class UpdaterUpdateSelfController : ControllerBase
             Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
             Response.Headers.Add("Content-Length", contentLength.ToString());
             await fileStream.CopyToAsync(Response.Body);
-            return new EmptyResult();
+            return new FileStreamResult(fileStream, contentType);
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+    [HttpHead("DownloadUpdaterInstaller")]
+    public async Task<IActionResult> DownloadUpdaterInstallerHead(string updaterName, string updaterVersion, string channel, string platform)
+    {
+        try
+        {
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_installer");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+            
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
+
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            return Ok();
         }
         catch (Exception ex)
         {
@@ -217,7 +291,45 @@ public class UpdaterUpdateSelfController : ControllerBase
             Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
             Response.Headers.Add("Content-Length", contentLength.ToString());
             await fileStream.CopyToAsync(Response.Body);
-            return new EmptyResult();
+            return new FileStreamResult(fileStream, contentType);
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+     [HttpHead("DownloadCurrentUpdaterZipFile")]
+    public async Task<IActionResult> DownloadCurrentUpdaterZipFileHead(string updaterName, string channel, string platform)
+    {
+        try
+        {
+            var updaterVersion = m_UpdaterUpdateSelfDataManager.GetCurrentData(updaterName, channel, platform);
+            
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_zip");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+            
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
+
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            return Ok();
         }
         catch (Exception ex)
         {
@@ -271,7 +383,43 @@ public class UpdaterUpdateSelfController : ControllerBase
             Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
             Response.Headers.Add("Content-Length", contentLength.ToString());
             await fileStream.CopyToAsync(Response.Body);
-            return new EmptyResult();
+            return new FileStreamResult(fileStream, contentType);
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+    [HttpHead("DownloadUpdaterZipFile")]
+    public async Task<IActionResult> DownloadUpdaterZipFileHead(string updaterName, string updaterVersion, string channel, string platform)
+    {
+        try
+        {
+            DownloadFileInfo downloadFileInfo;
+            downloadFileInfo.filePath = Path.Combine(m_UpdaterUpdateSelfDataManager.getUpdaterFolderPath(updaterName), channel, platform, updaterVersion, "updater_zip");
+            downloadFileInfo.md5 = Md5Util.CalculateFileMD5(downloadFileInfo.filePath);
+            downloadFileInfo.version = updaterVersion;
+            
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
+
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            return Ok();
         }
         catch (Exception ex)
         {
@@ -323,7 +471,41 @@ public class UpdaterUpdateSelfController : ControllerBase
             Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{fileName}\"");
             Response.Headers.Add("Content-Length", contentLength.ToString());
             await fileStream.CopyToAsync(Response.Body);
-            return new EmptyResult();
+            return new FileStreamResult(fileStream, contentType);
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(ex.ToString());
+        }
+    }
+    
+     [HttpHead("DownloadUpdaterFile")]
+    public async Task<IActionResult> DownloadUpdaterFileHead(string updaterName, string updaterVersion, string channel, string platform, string md5)
+    {
+        try
+        {
+            var downloadFileInfo =
+                m_UpdaterUpdateSelfDataManager.GetFile(updaterName, updaterVersion, channel, platform, md5);
+
+            if (downloadFileInfo.filePath == "")
+            {
+                return new EmptyResult();
+            }
+
+            var fileFullPath = downloadFileInfo.filePath;
+
+            if (!System.IO.File.Exists(fileFullPath))
+            {
+                return new EmptyResult();
+            }
+
+            var fileInfo = new FileInfo(fileFullPath);
+            var contentType = "application/octet-stream";
+            var fileName = fileInfo.Name;
+            var fileStream = new FileStream(fileFullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var contentLength = fileStream.Length;
+            Response.Headers.Add("Content-Length", contentLength.ToString());
+            return Ok();
         }
         catch (Exception ex)
         {

@@ -79,6 +79,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         UpdateConfigIo updateConfigIo(m_AppSpecification.appUpdateConfigFile);
         updateConfigIo.readFromFile();
 
+        ui->UpdateProgressBar->setValue(0);
         ui->UpdateLog->clear();
 
         this->setEnabled(false);
@@ -276,23 +277,26 @@ void MainWindow::handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo) {
             case UpdateStatus::Completed: {
                 ui->UpdateLog->append(QString::fromStdString(statusName));
                 auto future = m_UpdateFuture.get();
+                m_AppSpecificationIo.writeToFile();
+                this->setEnabled(true);
                 if (future.getStatus()) {
                     ui->UpdateProgressBar->setValue(100);
+                    progress = 100;
                     QMessageBox::information(this, "Info", "Update finished!");
                 }
                 else {
                     ui->UpdateProgressBar->setValue(0);
+                    progress = 0;
                     QMessageBox::critical(this, "Info",
                                           "Update failed!" + QString::fromStdString(future.getErrorMessage()));
                 }
-                m_AppSpecificationIo.writeToFile();
-                this->setEnabled(true);
                 refresh();
                 break;
             }
             case UpdateStatus::Failed: {
                 ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.ErrorMessage));
                 this->setEnabled(true);
+                ui->UpdateProgressBar->setValue(0);
                 QMessageBox::critical(this, "Info",
                                       "Update failed!" + QString::fromStdString(updateStatusInfo.ErrorMessage));
                 break;
