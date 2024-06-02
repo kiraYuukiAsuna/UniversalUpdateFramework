@@ -67,4 +67,4 @@ add_executable(UniversalUpdateFrameworkClient ${ProjectHeader} ${ProjectSource})
 target_compile_options(UniversalUpdateFrameworkClient
         PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-        $<$<CXX_COMPILER_ID:GNU>:-Wa,-mbig-obj>)
+        $<$<AND:$<CXX_COMPILER_ID:GNU>,$<BOOL:${GNU_BIG_OBJ_FLAG_ENABLE}>>:-Wa,-mbig-obj>)
