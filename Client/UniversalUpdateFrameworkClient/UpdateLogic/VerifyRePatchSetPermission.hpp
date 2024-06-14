@@ -15,32 +15,33 @@ public:
     static async_simple::coro::Lazy<ReturnWrapper>
     execute(ApiRequest&api, AppVersionInfo&appVersion, AppManifestInfo&appManifest, const std::string&appPath,
             std::function<void(UpdateStatusInfo)> updateStatusCallback) {
-        std::unordered_set<string> fileRelativrPathSet;
-        for (auto&fileManifest: appManifest.Manifests) {
-            fileRelativrPathSet.insert(fileManifest.FilePath);
-        }
+        // std::unordered_set<string> fileRelativrPathSet;
+        // for (auto&fileManifest: appManifest.Manifests) {
+        //     std::filesystem::path standardPath{fileManifest.FilePath};
+        //     fileRelativrPathSet.insert(standardPath.make_preferred().string());
+        // }
 
         ProcessUtil::TerminateProcessByFilePath(appPath);
 
-        for (auto&dirEntry: std::filesystem::recursive_directory_iterator(appPath)) {
-            if (!dirEntry.is_directory()) {
-                auto iter = fileRelativrPathSet.find(std::filesystem::relative(dirEntry.path(), appPath).string());
-                if (iter == fileRelativrPathSet.end()) {
-                    if (!ProcessUtil::DeleteFileRecursive(dirEntry.path())) {
-                        updateStatusCallback(UpdateStatusInfo{
-                            .status = UpdateStatus::Warning,
-                            .WarningMessage = std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed)) +
-                                              " FilePath: " + dirEntry.path().string()
-
-                        });
-                        //                        return {false, ErrorCode::DeleteFileFailed,
-                        //                                std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))};
-                        SEELE_INFO_TAG(__func__, "{}", std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed)) + " FilePath: " +
-                                dirEntry.path().string());
-                    }
-                }
-            }
-        }
+        // for (auto&dirEntry: std::filesystem::recursive_directory_iterator(appPath)) {
+        //     if (!dirEntry.is_directory()) {
+        //         auto iter = fileRelativrPathSet.find(std::filesystem::relative(dirEntry.path(), appPath).string());
+        //         if (iter == fileRelativrPathSet.end()) {
+        //             if (!ProcessUtil::DeleteFileRecursive(dirEntry.path())) {
+        //                 updateStatusCallback(UpdateStatusInfo{
+        //                     .status = UpdateStatus::Warning,
+        //                     .WarningMessage = std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed)) +
+        //                                       " FilePath: " + dirEntry.path().string()
+        //
+        //                 });
+        //                 //                        return {false, ErrorCode::DeleteFileFailed,
+        //                 //                                std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed))};
+        //                 SEELE_INFO_TAG(__func__, "{}", std::string(magic_enum::enum_name(ErrorCode::DeleteFileFailed)) + " FilePath: " +
+        //                         dirEntry.path().string());
+        //             }
+        //         }
+        //     }
+        // }
 
         for (auto&fileManifest: appManifest.Manifests) {
             auto localFilePath = appPath + "/" + fileManifest.FilePath;

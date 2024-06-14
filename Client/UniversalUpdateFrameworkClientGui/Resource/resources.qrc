@@ -1,11 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>fonts/SourceHanSansCN/SourceHanSansCN-Bold.ttf</file>
-        <file>fonts/SourceHanSansCN/SourceHanSansCN-ExtraLight.ttf</file>
-        <file>fonts/SourceHanSansCN/SourceHanSansCN-Heavy.ttf</file>
-        <file>fonts/SourceHanSansCN/SourceHanSansCN-Light.ttf</file>
-        <file>fonts/SourceHanSansCN/SourceHanSansCN-Medium.ttf</file>
-        <file>fonts/SourceHanSansCN/SourceHanSansCN-Normal.ttf</file>
         <file>fonts/SourceHanSansCN/SourceHanSansCN-Regular.ttf</file>
         <file>images/appicon.png</file>
     </qresource>

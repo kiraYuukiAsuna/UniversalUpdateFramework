@@ -77,6 +77,13 @@ inline int handleArgument(int argc, char* argv[]) {
     }
 }
 
+// int main(int argc, char* argv[]) {
+//     return handleArgument(argc, argv);
+// }
+
 int main(int argc, char* argv[]) {
-    return handleArgument(argc, argv);
+    ApiRequest api("http://localhost:5000", "TestApp", "TestChannel", "Windows");
+
+
+
 }

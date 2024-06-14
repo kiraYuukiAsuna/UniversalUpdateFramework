@@ -17,15 +17,6 @@ public:
         : m_Host(host), m_AppName(appname), m_Channel(channel), m_Platform(platform) {
     }
 
-    void mergeFiles(const std::vector<std::string>&fileNames, const std::string&outputFileName) {
-        std::ofstream outputFile(outputFileName, std::ios::binary);
-
-        for (const auto&fileName: fileNames) {
-            std::ifstream inputFile(fileName, std::ios::binary);
-            outputFile << inputFile.rdbuf();
-        }
-    }
-
     async_simple::coro::Lazy<std::pair<ReturnWrapper, std::string>>
     apiRequestDownload(std::string api, std::string localSaveFilePath, size_t&bytes_received,
                        size_t&bytes_total, std::function<void(UpdateStatusInfo)> updateStatusCallback) {
@@ -67,8 +58,6 @@ public:
         }
         bytes_total = std::stoul(std::string(iter->value));
 
-        std::vector<std::string> rangeFiles;
-
         updateStatusCallback(UpdateStatusInfo{
             .status = UpdateStatus::DownloadingFile,
             .CurrentFileName = localSaveFilePath,
@@ -77,6 +66,19 @@ public:
             .DownloadCurrentSize = 0
         });
 
+        std::ofstream ofstream(localSaveFilePath, std::ios::binary);
+        if (!ofstream.is_open()) {
+            SEELE_INFO_TAG(__func__, "Open File {} Failed!", localSaveFilePath);
+            std::pair<ReturnWrapper, std::string> ret{
+                {
+                    false, ErrorCode::HttpResponseError,
+                    "Open File " + localSaveFilePath + " Failed!"
+                },
+                ""
+            };
+            co_return ret;
+        }
+
         // Download the file in chunks of 10MB
         const size_t chunk_size = 10 * 1024 * 1024;
         for (size_t start = 0; start < bytes_total; start += chunk_size) {
@@ -84,30 +86,19 @@ public:
             SEELE_INFO_TAG(__func__, "{}",
                            "Download Range: " + std::to_string(start) + "-" + std::to_string(end) + "/" + std::to_string
                            (bytes_total));
-            std::string rangeFilePath = localSaveFilePath + "_range=" + std::to_string(start) + "-" +
-                                        std::to_string(end);
-            auto result = co_await client.async_download(uri, rangeFilePath,
-                                                         std::to_string(start) + "-" + std::to_string(end));
+            std::unordered_map<std::string, std::string> headers = {
+                {
+                    "Range", "bytes=" + std::to_string(start) + "-" +
+                             std::to_string(end)
+                }
+            };
+            client.add_header("Range", "bytes=" + std::to_string(start) + "-" +
+                                       std::to_string(end));
+            auto result = co_await client.async_get(uri);
             if (!result.net_err && result.status == 206) {
                 bytes_received += end - start + 1;
 
-                std::ofstream ofstream(rangeFilePath, std::ios::binary);
-                if (!ofstream.is_open()) {
-                    SEELE_INFO_TAG(__func__, "{}", "Open File Error! File:" + rangeFilePath);
-                    std::pair<ReturnWrapper, std::string> ret{
-                        {
-                            false, ErrorCode::AccessFileFailed,
-                            "Open File Error! File:" + rangeFilePath
-                        },
-                        ""
-                    };
-                    co_return ret;
-                }
-
                 ofstream << result.resp_body;
-                ofstream.close();
-
-                rangeFiles.push_back(rangeFilePath);
             }
             else {
                 SEELE_INFO_TAG(__func__, "{}", "Http Response Error!" + result.net_err.message());
@@ -129,7 +120,7 @@ public:
             });
         }
 
-        mergeFiles(rangeFiles, localSaveFilePath);
+        ofstream.close();
 
         std::pair<ReturnWrapper, std::string> ret{{true}, localSaveFilePath};
         SEELE_INFO_TAG(__func__, "Download file success! File: {}", localSaveFilePath);
@@ -307,6 +298,137 @@ public:
         std::string url = std::format(
             "/api/v1/DownloadDifferencePackage?appname={}&appversion={}&channel={}&platform={}", m_AppName, version,
             m_Channel, m_Platform);
+        size_t bytes_received = 0;
+        size_t bytes_total = 0;
+
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total), updateStatusCallback);
+
+        std::chrono::milliseconds timeout(100);
+        while (future.wait_for(timeout) != std::future_status::ready) {
+            checkProgress(bytes_received, bytes_total);
+        }
+
+        auto res = future.get();
+        checkProgress(bytes_received, bytes_total);
+        std::cout << std::endl;
+        return res;
+    }
+
+    auto GetCurrentUpdaterVersion(std::string updaterName) {
+        std::string url = std::format("/api/v1/GetCurrentUpdaterVersion?updaterName={}&channel={}&platform={}",
+                                      updaterName, m_Channel, m_Platform);
+        return httpRequestGet(url);
+    }
+
+    auto GetUpdaterVersionConfig(std::string updaterName) {
+        std::string url = std::format("/api/v1/GetUpdaterVersionConfig?appname={}&channel={}&platform={}",
+                                      updaterName, m_Channel, m_Platform);
+        return httpRequestGet(url);
+    }
+
+    auto
+    DownloadCurrentUpdaterInstaller(std::string updaterName, std::string localSaveFilePath,
+                                    std::function<void(UpdateStatusInfo)> updateStatusCallback) {
+        std::string url = std::format(
+            "/api/v1/DownloadCurrentUpdaterInstaller?updaterName={}&channel={}&platform={}", updaterName,
+            m_Channel, m_Platform);
+        size_t bytes_received = 0;
+        size_t bytes_total = 0;
+
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total), updateStatusCallback);
+
+        std::chrono::milliseconds timeout(100);
+        while (future.wait_for(timeout) != std::future_status::ready) {
+            checkProgress(bytes_received, bytes_total);
+        }
+
+        auto res = future.get();
+        checkProgress(bytes_received, bytes_total);
+        std::cout << std::endl;
+        return res;
+    }
+
+    auto
+    DownloadUpdaterInstaller(std::string updaterName, std::string updaterVersion, std::string localSaveFilePath,
+                             std::function<void(UpdateStatusInfo)> updateStatusCallback) {
+        std::string url = std::format(
+            "/api/v1/DownloadUpdaterInstaller?updaterName={}&updaterVersion={}&channel={}&platform={}", updaterName,
+            updaterVersion,
+            m_Channel, m_Platform);
+        size_t bytes_received = 0;
+        size_t bytes_total = 0;
+
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total), updateStatusCallback);
+
+        std::chrono::milliseconds timeout(100);
+        while (future.wait_for(timeout) != std::future_status::ready) {
+            checkProgress(bytes_received, bytes_total);
+        }
+
+        auto res = future.get();
+        checkProgress(bytes_received, bytes_total);
+        std::cout << std::endl;
+        return res;
+    }
+
+    auto
+    DownloadCurrentUpdaterZipFile(std::string updaterName, std::string localSaveFilePath,
+                                  std::function<void(UpdateStatusInfo)> updateStatusCallback) {
+        std::string url = std::format(
+            "/api/v1/DownloadCurrentUpdaterZipFile?updaterName={}&channel={}&platform={}", updaterName,
+            m_Channel, m_Platform);
+        size_t bytes_received = 0;
+        size_t bytes_total = 0;
+
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total), updateStatusCallback);
+
+        std::chrono::milliseconds timeout(100);
+        while (future.wait_for(timeout) != std::future_status::ready) {
+            checkProgress(bytes_received, bytes_total);
+        }
+
+        auto res = future.get();
+        checkProgress(bytes_received, bytes_total);
+        std::cout << std::endl;
+        return res;
+    }
+
+    auto
+    DownloadUpdaterZipFile(std::string updaterName, std::string updaterVersion, std::string localSaveFilePath,
+                           std::function<void(UpdateStatusInfo)> updateStatusCallback) {
+        std::string url = std::format(
+            "/api/v1/DownloadUpdaterZipFile?updaterName={}&updaterVersion={}&channel={}&platform={}", updaterName,
+            updaterVersion,
+            m_Channel, m_Platform);
+        size_t bytes_received = 0;
+        size_t bytes_total = 0;
+
+        auto future = std::async(std::launch::async, &ApiRequest::apiRequestDownload, this, url, localSaveFilePath,
+                                 std::ref(bytes_received), std::ref(bytes_total), updateStatusCallback);
+
+        std::chrono::milliseconds timeout(100);
+        while (future.wait_for(timeout) != std::future_status::ready) {
+            checkProgress(bytes_received, bytes_total);
+        }
+
+        auto res = future.get();
+        checkProgress(bytes_received, bytes_total);
+        std::cout << std::endl;
+        return res;
+    }
+
+    auto
+    DownloadUpdaterFile(std::string updaterName, std::string updaterVersion, std::string md5,
+                        std::string localSaveFilePath,
+                        std::function<void(UpdateStatusInfo)> updateStatusCallback) {
+        std::string url = std::format(
+            "/api/v1/DownloadUpdaterFile?updaterName={}&updaterVersion={}&channel={}&platform={}&md5={}", updaterName,
+            updaterVersion,
+            m_Channel, m_Platform, md5);
         size_t bytes_received = 0;
         size_t bytes_total = 0;
 

@@ -7,6 +7,15 @@
 #include <filesystem>
 
 namespace util {
+    inline void mergeFiles(const std::vector<std::string>&fileNames, const std::string&outputFileName) {
+        std::ofstream outputFile(outputFileName, std::ios::binary);
+
+        for (const auto&fileName: fileNames) {
+            std::ifstream inputFile(fileName, std::ios::binary);
+            outputFile << inputFile.rdbuf();
+        }
+    }
+
     inline std::vector<std::string> string_split(const std::string&s, char delim = ' ') {
         std::vector<std::string> tokens;
         for (auto token: s | std::views::split(delim)) {

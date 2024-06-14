@@ -42,12 +42,12 @@ public class UpdaterUpdateSelfController : ControllerBase
     }
 
     [HttpGet("GetUpdaterVersionConfig")]
-    public JsonResult GetUpdaterVersionConfig(string appname, string channel, string platform)
+    public JsonResult GetUpdaterVersionConfig(string updaterName, string channel, string platform)
     {
         try
         {
             var versionconfigFileContent =
-                m_UpdaterUpdateSelfDataManager.GetUpdaterVersionConfig(appname, channel, platform);
+                m_UpdaterUpdateSelfDataManager.GetUpdaterVersionConfig(updaterName, channel, platform);
 
             JsonDocument jsonDocument = JsonDocument.Parse(versionconfigFileContent);
             JsonElement rootElement = jsonDocument.RootElement;

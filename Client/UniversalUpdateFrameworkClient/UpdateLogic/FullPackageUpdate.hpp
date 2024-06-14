@@ -83,8 +83,10 @@ public:
             .status = UpdateStatus::DownloadFullPackageFile,
         });
         auto [resultx, _] = co_await (m_NewVersion.empty()
-                                          ? m_ApiRequest.DownloadCurrentFullPackage(fullPackageFile.string(), updateStatusCallback)
-                                          : m_ApiRequest.DownloadFullPackage(m_NewVersion, fullPackageFile.string(), updateStatusCallback));
+                                          ? m_ApiRequest.DownloadCurrentFullPackage(
+                                              fullPackageFile.string(), updateStatusCallback)
+                                          : m_ApiRequest.DownloadFullPackage(
+                                              m_NewVersion, fullPackageFile.string(), updateStatusCallback));
         if (!resultx.getStatus()) {
             co_return resultx;
         }
@@ -133,21 +135,21 @@ public:
             updateStatusCallback(UpdateStatusInfo{
                 .status = UpdateStatus::Failed,
                 .ErrorMessage = std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed)) + " , From File:"
-                                + uncompresssedPath.string() + " , To File:" + m_AppPath
+                                + uncompresssedPath.string() + " , To File:" + m_AppPath + " , Error:" + ec.message()
             });
             co_return ReturnWrapper{
                 false, ErrorCode::CopyNewVersionDirFailed,
                 std::string(magic_enum::enum_name(ErrorCode::CopyNewVersionDirFailed)) + " , From File:"
-                + uncompresssedPath.string() + " , To File:" + m_AppPath
+                + uncompresssedPath.string() + " , To File:" + m_AppPath + " , Error:" + ec.message()
             };
-        } {
-            auto result = co_await
-                    VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath,
-                                                        updateStatusCallback);
-            if (!result.getStatus()) {
-                co_return result;
-            }
         }
+        auto result = co_await
+                VerifyRePatchSetPermission::execute(m_ApiRequest, appVersion, appManifest, m_AppPath,
+                                                    updateStatusCallback);
+        if (!result.getStatus()) {
+            co_return result;
+        }
+
         ProcessUtil::DeleteFileRecursive(m_DownloadPath);
         if (ec) {
             updateStatusCallback(UpdateStatusInfo{
