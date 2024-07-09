@@ -14,6 +14,7 @@ public:
     std::string AppCurrentVersion;
     std::string AppBeforeVersion;
     std::string UpdateReadMe;
+    uint32_t ForceUpdate;
 
     friend void to_json(nlohmann::json&nlohmann_json_j, const UpdatePackageBuildInfo&nlohmann_json_t) {
         nlohmann_json_j["PackageMode"] = nlohmann_json_t.PackageMode;

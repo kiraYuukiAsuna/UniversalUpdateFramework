@@ -5,7 +5,7 @@
 // .\UniversalUpdateFrameworkGenerator.exe -m DifferencePackage -o D:\WorkSpace\UnrealEngine\1.1.0 -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0 -b 1.1.0
 // .\UniversalUpdateFrameworkGenerator.exe -m FullPackage -n D:\WorkSpace\UnrealEngine\1.2.0 -a Aurora -v 1.2.0
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     try {
         cxxopts::Options options("UniversalUpdateFramework Generator",
                                  "A tool that help you generate appversion, appmanifest, apppackage file.");
@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
                 ("o,platform", "Platform.", cxxopts::value<std::string>())
                 ("v,appversion", "App version.", cxxopts::value<std::string>())
                 ("b,appbeforeversion", "App before version.", cxxopts::value<std::string>())
+                ("f,forceupdate", "Force to update.", cxxopts::value<std::string>())
                 ("h,help", "Print usage.");
         auto result = options.parse(argc, argv);
 
@@ -33,36 +34,46 @@ int main(int argc, char *argv[]) {
                 UpdatePackageBuildInfo info;
                 if (result.count("appname")) {
                     info.AppName = result["appname"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing appname.\n";
                     return -1;
                 }
                 if (result.count("channel")) {
                     info.Channel = result["channel"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing channel.\n";
                     return -1;
                 }
                 if (result.count("platform")) {
                     info.Platform = result["platform"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing platform.\n";
                     return -1;
                 }
                 if (result.count("appversion")) {
                     info.AppCurrentVersion = result["appversion"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing appversion.\n";
                     return -1;
                 }
                 if (result.count("newPath")) {
                     info.NewVersionPath = result["newPath"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing newPath.\n";
                     return -1;
                 }
-
-
+                if (result.count("forceupdate")) {
+                    info.ForceUpdate = std::stoi(result["forceupdate"].as<std::string>());
+                }
+                else {
+                    std::cout << "Missing forceupdate.\n";
+                    return -1;
+                }
 
                 UpdatePackageBuildInfo packageBuildInfo;
                 packageBuildInfo.PackageMode = "FullPackage";
@@ -73,48 +84,63 @@ int main(int argc, char *argv[]) {
                 packageBuildInfo.AppCurrentVersion = info.AppCurrentVersion;
 
                 return generateFullPackage(packageBuildInfo);
-            } else if (mode == "DifferencePackage") {
+            }
+            else if (mode == "DifferencePackage") {
                 UpdatePackageBuildInfo info;
                 if (result.count("appname")) {
                     info.AppName = result["appname"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing appname.\n";
                     return -1;
                 }
                 if (result.count("channel")) {
                     info.Channel = result["channel"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing channel.\n";
                     return -1;
                 }
                 if (result.count("platform")) {
                     info.Platform = result["platform"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing platform.\n";
                     return -1;
                 }
                 if (result.count("appversion")) {
                     info.AppCurrentVersion = result["appversion"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing appversion.\n";
                     return -1;
                 }
                 if (result.count("appbeforeversion")) {
                     info.AppBeforeVersion = result["appbeforeversion"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing appbeforeversion.\n";
                     return -1;
                 }
                 if (result.count("newPath")) {
                     info.NewVersionPath = result["newPath"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing newPath.\n";
                     return -1;
                 }
                 if (result.count("oldPath")) {
                     info.OldVersionPath = result["oldPath"].as<std::string>();
-                } else {
+                }
+                else {
                     std::cout << "Missing oldPath.\n";
+                    return -1;
+                }
+                if (result.count("forceupdate")) {
+                    info.ForceUpdate = std::stoi(result["forceupdate"].as<std::string>());
+                }
+                else {
+                    std::cout << "Missing forceupdate.\n";
                     return -1;
                 }
 
@@ -129,14 +155,17 @@ int main(int argc, char *argv[]) {
                 packageBuildInfo.AppBeforeVersion = info.AppBeforeVersion;
 
                 return generateDifferencePackage(packageBuildInfo);
-            } else {
+            }
+            else {
                 std::cout << "Unknow mode.\n";
             }
-        } else {
+        }
+        else {
             std::cout << "Missing mode.\n";
         }
         return 0;
-    } catch (std::exception &e) {
+    }
+    catch (std::exception&e) {
         std::cerr << "Exception:" << e.what() << "\n";
     }
 }

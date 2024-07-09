@@ -76,21 +76,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
             return;
         }
 
-        UpdateConfigIo updateConfigIo(m_AppSpecification.appUpdateConfigFile);
-        updateConfigIo.readFromFile();
-
-        ui->UpdateProgressBar->setValue(0);
-        ui->DownloadFileProgress->setValue(0);
-        ui->UpdateLog->clear();
-
-        this->setEnabled(false);
-        m_UpdateFuture = std::async(std::launch::async,
-                                    handleUpdateMode,
-                                    updateMode,
-                                    updateConfigIo,
-                                    m_ServerCurrentAppVersion.AppVersion, [this](UpdateStatusInfo updateStatusInfo) {
-                                        handleUpdateStatusInfo(updateStatusInfo);
-                                    });
+        executeUpdate(updateMode);
     });
 
 
@@ -136,6 +122,9 @@ void MainWindow::refresh() {
                     m_ApiRequest->GetCurrentAppManifest()); result.getStatus()) {
                     AppManifestInfo appManifest = nlohmann::json::parse(appManifestContent);
                     ui->UpdateReadMe->setMarkdown(QString::fromStdString(appManifest.UpdateReadMe));
+                }
+                if(m_ServerCurrentAppVersion.ForceUpdate) {
+                    executeUpdate(UpdateMode::MultiVersionDifferencePackageUpdate);
                 }
             }
             else {
@@ -253,8 +242,11 @@ void MainWindow::handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo) {
             }
             case UpdateStatus::DownloadingFile: {
                 ui->UpdateLog->append(QString::fromStdString(statusName + ":\n\t" + updateStatusInfo.CurrentFileName));
-                ui->DownloadFileProgress->setValue(int((float)updateStatusInfo.DownloadCurrentSize / updateStatusInfo.DownloadTotalSize * 100));
-                ui->DownloadFileSizeProgress->setText(QString::fromStdString(std::to_string(updateStatusInfo.DownloadCurrentSize / 1024 / 1024) + " / " + std::to_string(updateStatusInfo.DownloadTotalSize/ 1024 / 1024) + " MB"));
+                ui->DownloadFileProgress->setValue(
+                    int((float)updateStatusInfo.DownloadCurrentSize / updateStatusInfo.DownloadTotalSize * 100));
+                ui->DownloadFileSizeProgress->setText(QString::fromStdString(
+                    std::to_string(updateStatusInfo.DownloadCurrentSize / 1024 / 1024) + " / " + std::to_string(
+                        updateStatusInfo.DownloadTotalSize / 1024 / 1024) + " MB"));
                 break;
             }
             case UpdateStatus::CopyingFile: {
@@ -310,4 +302,26 @@ void MainWindow::handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo) {
         }
         ui->UpdateLog->moveCursor(QTextCursor::End);
     }, Qt::QueuedConnection);
+}
+
+std::string MainWindow::getTempLocation() {
+    return QStandardPaths::writableLocation(QStandardPaths::TempLocation).toStdString();
+}
+
+void MainWindow::executeUpdate(UpdateMode mode) {
+    UpdateConfigIo updateConfigIo(m_AppSpecification.appUpdateConfigFile);
+    updateConfigIo.readFromFile();
+
+    ui->UpdateProgressBar->setValue(0);
+    ui->DownloadFileProgress->setValue(0);
+    ui->UpdateLog->clear();
+
+    this->setEnabled(false);
+    m_UpdateFuture = std::async(std::launch::async,
+                                handleUpdateMode,
+                                mode,
+                                updateConfigIo,
+                                m_ServerCurrentAppVersion.AppVersion, [this](UpdateStatusInfo updateStatusInfo) {
+                                    handleUpdateStatusInfo(updateStatusInfo);
+                                });
 }

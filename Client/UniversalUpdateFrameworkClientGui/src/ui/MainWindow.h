@@ -5,6 +5,7 @@
 #include "UpdateCore/UpdateConfig.hpp"
 #include "Network/ApiRequest.hpp"
 #include <AppVersion.hpp>
+#include <Defination.hpp>
 #include <QStandardPaths>
 
 struct UpdateStatusInfo;
@@ -38,7 +39,7 @@ private:
 
     void handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo);
 
-    std::string getTempLocation() {
-        return QStandardPaths::writableLocation(QStandardPaths::TempLocation).toStdString();
-    }
+    std::string getTempLocation();
+
+    void executeUpdate(UpdateMode mode);
 };
