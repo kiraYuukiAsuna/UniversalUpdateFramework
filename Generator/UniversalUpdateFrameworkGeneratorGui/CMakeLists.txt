@@ -7,6 +7,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(CMAKE_PREFIX_PATH "C:/Qt/6.6.0/msvc2019_64")
+
 find_package(Qt6 COMPONENTS
         Core
         Gui
