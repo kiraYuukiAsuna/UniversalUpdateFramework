@@ -1,11 +1,11 @@
 #pragma once
 
 enum class UpdateMode {
-    Unknown,
-    FullPackageUpdate,
-    DifferencePackageUpdate,
-    MultiVersionDifferencePackageUpdate,
-    DifferenceUpdate
+	Unknown,
+	FullPackageUpdate,
+	DifferencePackageUpdate,
+	MultiVersionDifferencePackageUpdate,
+	DifferenceUpdate
 };
 
 #ifdef WIN32

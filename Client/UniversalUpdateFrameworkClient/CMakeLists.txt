@@ -4,30 +4,14 @@ project(UniversalUpdateFrameworkClient)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-include_directories(
-        ../../ThirdParty/nlohmann_json
-        ../../ThirdParty/httplib
-        ../../ThirdParty/cxxopts
-        ../../ThirdParty/magic_enum
-        ../../Common/md5
-        ../../Common/util
-        ../../ThirdParty/asio-1.30.2/include
-        ../../Generator/UniversalUpdateFrameworkGenerator/src
-        ../../Common/processutil
-        ../../ThirdParty/cinatra/include
-        ../../ThirdParty/spdlog/include
-        ../../ThirdParty/backward
-        ../../Common/log
-)
-
 set(ProjectHeader
         ../../Common/md5/md5.h
         ../../Common/util/util.hpp
 
-        ../../Generator/UniversalUpdateFrameworkGenerator/src/AppVersion.hpp
-        ../../Generator/UniversalUpdateFrameworkGenerator/src/AppManifest.hpp
-        ../../Generator/UniversalUpdateFrameworkGenerator/src/FullPackageManifest.hpp
-        ../../Generator/UniversalUpdateFrameworkGenerator/src/DifferencePackageManifest.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/TypeDefination/AppVersion.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/TypeDefination/AppManifest.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/TypeDefination/FullPackageManifest.hpp
+        ../../Generator/UniversalUpdateFrameworkGenerator/src/TypeDefination/DifferencePackageManifest.hpp
 
         Network/ApiRequest.hpp
 
@@ -63,6 +47,51 @@ elseif (APPLE)
 endif ()
 
 add_executable(UniversalUpdateFrameworkClient ${ProjectHeader} ${ProjectSource})
+
+target_include_directories(UniversalUpdateFrameworkClient
+        PRIVATE
+        ../../ThirdParty/nlohmann_json
+        ../../ThirdParty/httplib
+        ../../ThirdParty/cxxopts
+        ../../ThirdParty/magic_enum
+        ../../Common/md5
+        ../../Common/util
+        ../../ThirdParty/asio-1.30.2/include
+        ../../Generator/UniversalUpdateFrameworkGenerator/src
+        ../../Common/processutil
+        ../../ThirdParty/cinatra/include
+        ../../ThirdParty/spdlog/include
+        ../../ThirdParty/backward
+        ../../Common/log
+        ../../ThirdParty/openssl/include
+)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_link_directories(UniversalUpdateFrameworkClient
+                PRIVATE
+                ../../ThirdParty/openssl/lib/debug
+                )
+        target_link_libraries(UniversalUpdateFrameworkClient
+                PRIVATE
+                libssl
+                libcrypto
+                )
+else()
+        target_link_directories(UniversalUpdateFrameworkClient
+                PRIVATE
+                ../../ThirdParty/openssl/lib/release
+                )
+        target_link_libraries(UniversalUpdateFrameworkClient
+                PRIVATE
+                libssl
+                libcrypto
+                )
+endif()
+
+target_compile_definitions(UniversalUpdateFrameworkClient
+        PRIVATE
+        CINATRA_ENABLE_SSL
+)
 
 target_compile_options(UniversalUpdateFrameworkClient
         PRIVATE

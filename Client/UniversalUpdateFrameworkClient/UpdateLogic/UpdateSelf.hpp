@@ -1,18 +1,18 @@
 #pragma once
 
+#include <TypeDefination/VersionConfig.hpp>
 #include <utility>
 
 #include "Network/ApiRequest.hpp"
-#include <VersionConfig.hpp>
 
 /* Updater_Vx.x.x
- * fullpackage
- * Updater.exe
+ * fullpackage (folder)
  * AppSpecification.json
  * AppUpdateConfig.json
  * OtherFiles...
- * Updater_Vx.x.x_zip.zip
- * Updater_Vx.x.x_installer.exe
+ * Updater_zip
+ * Updater_installer
+ * versionconfig.json
  * ---- versionconfig.json
  *  {
  *      "current_version": "x.x.x",
@@ -33,19 +33,26 @@
  *  }
  *
  */
+/* Updater_Vx.x.x
+ * Updater.exe
+ * AppSpecification.json
+ * AppUpdateConfig.json
+ * OtherFiles...
+ * Updater_zip_Vx.x.x.zip
+ * Updater_installer_Vx.x.x.exe
+ */
 
 class UpdateSelf {
 public:
-    UpdateSelf(std::string updateIntermidiatePath, std::string updaterFinalPath)
-        : m_UpdateIntermidiatePath(std::move(updateIntermidiatePath)), m_UpdaterFinalPath(std::move(updaterFinalPath)){
+	UpdateSelf(std::string updateIntermidiatePath, std::string updaterFinalPath)
+		: m_UpdateIntermidiatePath(std::move(updateIntermidiatePath)),
+		  m_UpdaterFinalPath(std::move(updaterFinalPath)) {}
 
-    }
-
-    // ReturnWrapper execute() {
-    //     auto apiRequest = ApiRequest();
-    // }
+	// ReturnWrapper execute() {
+	//     auto apiRequest = ApiRequest();
+	// }
 
 private:
-    std::string m_UpdateIntermidiatePath;
-    std::string m_UpdaterFinalPath;
+	std::string m_UpdateIntermidiatePath;
+	std::string m_UpdaterFinalPath;
 };

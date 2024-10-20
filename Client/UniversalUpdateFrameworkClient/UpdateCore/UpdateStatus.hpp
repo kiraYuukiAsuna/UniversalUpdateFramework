@@ -3,45 +3,45 @@
 #include <string>
 
 enum class UpdateStatus {
-    None,
+	None,
 
-    DownloadAppVersionFile,
-    DownloadAppManifestFile,
-    DownloadFullPackageManifestFile,
-    DownloadFullPackageFile,
-    DownloadDifferencePackageManifestFile,
-    DownloadDifferencePackageFile,
+	DownloadAppVersionFile,
+	DownloadAppManifestFile,
+	DownloadFullPackageManifestFile,
+	DownloadFullPackageFile,
+	DownloadDifferencePackageManifestFile,
+	DownloadDifferencePackageFile,
 
-    FullPackageUpdateInstalling,
-    DifferencePackageUpdateInstalling,
-    DifferenceUpdateInstalling,
-    MutilVersionUpdateInstalling,
-    VerifyingUpdate,
-    RepatchingUpdate,
+	FullPackageUpdateInstalling,
+	DifferencePackageUpdateInstalling,
+	DifferenceUpdateInstalling,
+	MutilVersionUpdateInstalling,
+	VerifyingUpdate,
+	RepatchingUpdate,
 
-    VerifyingFile,
-    DownloadingFile,
-    CopyingFile,
-    DeletingFile,
-    UpdatingFile,
-    CreatingFile,
+	VerifyingFile,
+	DownloadingFile,
+	CopyingFile,
+	DeletingFile,
+	UpdatingFile,
+	CreatingFile,
 
-    Warning,
+	Warning,
 
-    Completed,
-    Failed,
+	Completed,
+	Failed,
 };
 
 struct UpdateStatusInfo {
-    UpdateStatus status;
+	UpdateStatus status;
 
-    std::string CurrentFileName;
-    float CurerentProgress;
+	std::string CurrentFileName;
+	float CurrentProgress;
 
-    int DownloadTotalSize;
-    int DownloadCurrentSize;
-    float DownloadCurrentSpeed;
+	int DownloadTotalSize;
+	int DownloadCurrentSize;
+	float DownloadCurrentSpeed;
 
-    std::string WarningMessage;
-    std::string ErrorMessage;
+	std::string WarningMessage;
+	std::string ErrorMessage;
 };

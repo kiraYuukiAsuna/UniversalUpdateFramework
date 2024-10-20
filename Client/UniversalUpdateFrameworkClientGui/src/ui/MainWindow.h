@@ -1,45 +1,48 @@
 #pragma once
 
-#include <QMainWindow>
-#include "src/framework/Definition/AppSpecification.hpp"
-#include "UpdateCore/UpdateConfig.hpp"
-#include "Network/ApiRequest.hpp"
-#include <AppVersion.hpp>
 #include <Defination.hpp>
+#include <QMainWindow>
 #include <QStandardPaths>
+#include <TypeDefination/AppVersion.hpp>
+
+#include "Network/ApiRequest.hpp"
+#include "UpdateCore/UpdateConfig.hpp"
+#include "src/framework/Definition/AppSpecification.hpp"
 
 struct UpdateStatusInfo;
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui {
+	class MainWindow;
+}
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow {
-Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+	explicit MainWindow(QWidget *parent = nullptr);
 
-    ~MainWindow() override;
+	~MainWindow() override;
 
 private:
-    Ui::MainWindow *ui;
+	Ui::MainWindow *ui;
 
-    AppSpecificationIo m_AppSpecificationIo{"AppSpecification.json"};
+	AppSpecificationIo m_AppSpecificationIo{"AppSpecification.json"};
 
-    UpdateConfig m_UpdateConfig;
-    AppSpecification m_AppSpecification;
-    ApiRequest* m_ApiRequest;
-    AppVersionInfo m_ServerCurrentAppVersion;
+	UpdateConfig m_UpdateConfig;
+	AppSpecification m_AppSpecification;
+	ApiRequest *m_ApiRequest;
+	AppVersionInfo m_ServerCurrentAppVersion;
 
-    std::future<ReturnWrapper> m_UpdateFuture;
+	std::future<ReturnWrapper> m_UpdateFuture;
 
-    void refresh();
+	void refresh();
 
-    void initialize();
+	void initialize();
 
-    void handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo);
+	void handleUpdateStatusInfo(UpdateStatusInfo updateStatusInfo);
 
-    std::string getTempLocation();
+	std::string getTempLocation();
 
-    void executeUpdate(UpdateMode mode);
+	void executeUpdate(UpdateMode mode);
 };

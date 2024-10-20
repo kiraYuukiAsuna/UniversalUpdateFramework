@@ -1,6 +1,6 @@
 #pragma once
 
 namespace Image {
-    inline const char* ImageAppIcon = ":/images/appicon.png";
+	inline const char* ImageAppIcon = ":/images/appicon.png";
 
 }
