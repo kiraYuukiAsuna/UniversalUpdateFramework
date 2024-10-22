@@ -7,9 +7,9 @@
 
 /* Updater_Vx.x.x
  * fullpackage (folder)
- * AppSpecification.json
- * AppUpdateConfig.json
- * OtherFiles...
+    * AppSpecification.json
+    * AppUpdateConfig.json
+    * OtherFiles...
  * Updater_zip
  * Updater_installer
  * versionconfig.json

@@ -90,129 +90,55 @@ inline int handleArgument(int argc, char *argv[]) {
 //     return handleArgument(argc, argv);
 // }
 
-async_simple::coro::Lazy<std::pair<ReturnWrapper, std::string>>
-apiRequestDownload(std::string uri, std::string localSaveFilePath,
-				   size_t &bytes_received, size_t &bytes_total,
-				   std::function<void(UpdateStatusInfo)> updateStatusCallback) {
-	cinatra::coro_http_client client1{};
-	cinatra::coro_http_client client{};
-	std::error_code ec{};
-	std::filesystem::remove(localSaveFilePath, ec);
-
-	// Send a HEAD request
-	auto head_result = co_await client1.async_head(uri);
-	if (head_result.net_err || head_result.status != 200) {
-		SEELE_INFO_TAG(__func__, "{}",
-					   "Http Response Error!" + head_result.net_err.message());
-		std::pair<ReturnWrapper, std::string> ret{
-			{false, ErrorCode::HttpResponseError,
-			 "Http Response Error!" + head_result.net_err.message()},
-			""};
-		co_return ret;
-	}
-
-	auto iter = std::find_if(head_result.resp_headers.begin(),
-							 head_result.resp_headers.end(),
-							 [](const cinatra::http_header &header) {
-								 return header.name == "Content-Length";
-							 });
-	if (iter == head_result.resp_headers.end()) {
-		SEELE_INFO_TAG(__func__, "{}",
-					   "Http Response Error! Content-Length not found!");
-
-		std::pair<ReturnWrapper, std::string> ret{
-			{false, ErrorCode::HttpResponseError,
-			 "Http Response Error! Content-Length not found!"},
-			""};
-		co_return ret;
-	}
-	bytes_total = std::stoul(std::string(iter->value));
-
-	updateStatusCallback(
-		UpdateStatusInfo{.status = UpdateStatus::DownloadingFile,
-						 .CurrentFileName = localSaveFilePath,
-						 .CurrentProgress = 0,
-						 .DownloadTotalSize = static_cast<int>(bytes_total),
-						 .DownloadCurrentSize = 0});
-
-	std::ofstream ofstream(localSaveFilePath, std::ios::binary);
-	if (!ofstream.is_open()) {
-		SEELE_INFO_TAG(__func__, "Open File {} Failed!", localSaveFilePath);
-		std::pair<ReturnWrapper, std::string> ret{
-			{false, ErrorCode::HttpResponseError,
-			 "Open File " + localSaveFilePath + " Failed!"},
-			""};
-		co_return ret;
-	}
-
-	// Download the file in chunks of 10MB
-	const size_t chunk_size = 10 * 1024 * 1024;
-	for (size_t start = 0; start < bytes_total; start += chunk_size) {
-		size_t end = std::min(start + chunk_size - 1, bytes_total - 1);
-		SEELE_INFO_TAG(__func__, "{}",
-					   "Download Range: " + std::to_string(start) + "-" +
-						   std::to_string(end) + "/" +
-						   std::to_string(bytes_total));
-		std::unordered_map<std::string, std::string> headers = {
-			{"Range",
-			 "bytes=" + std::to_string(start) + "-" + std::to_string(end)}};
-		client.add_header("Range", "bytes=" + std::to_string(start) + "-" +
-									   std::to_string(end));
-		auto result = co_await client.async_get(uri);
-		if (!result.net_err && result.status == 206) {
-			bytes_received += end - start + 1;
-
-			ofstream << result.resp_body;
-		} else {
-			SEELE_INFO_TAG(__func__, "{}",
-						   "Http Response Error!" + result.net_err.message());
-			std::pair<ReturnWrapper, std::string> ret{
-				{false, ErrorCode::HttpResponseError,
-				 "Http Response Error!" + result.net_err.message()},
-				""};
-			co_return ret;
-		}
-		updateStatusCallback(UpdateStatusInfo{
-			.status = UpdateStatus::DownloadingFile,
-			.CurrentFileName = localSaveFilePath,
-			.CurrentProgress = static_cast<float>(start) / bytes_total,
-			.DownloadTotalSize = static_cast<int>(bytes_total),
-			.DownloadCurrentSize = static_cast<int>(bytes_received)});
-	}
-
-	ofstream.close();
-
-	std::pair<ReturnWrapper, std::string> ret{{true}, localSaveFilePath};
-	SEELE_INFO_TAG(__func__, "Download file success! File: {}",
-				   localSaveFilePath);
-	co_return ret;
-}
-
 int main(int argc, char *argv[]) {
 	// ApiRequest api("http://localhost:5000", "TestApp", "TestChannel",
 	// "Windows");
-	Seele::Log::Init();
-	size_t bytes_received = 0;
-	size_t bytes_total = 0;
-	auto a = apiRequestDownload(
-		"https://vip.123pan.cn:443/1838918272/"
-		"8469473?auth_key=1729198020-1061263672-"
-		"1838918272-eddcc68396d5c9adb5a3161ff973bf58",
-		"a.exe", bytes_received, bytes_total,
-		[](UpdateStatusInfo updateStatusInfo) {
-			std::cout << "Downloading " << updateStatusInfo.CurrentFileName
-					  << " " << updateStatusInfo.CurrentProgress << "\n";
-		});
+	// Seele::Log::Init();
+	// size_t bytes_received = 0;
+	// size_t bytes_total = 0;
+	// auto a = apiRequestDownload(
+	// 	"https://vip.123pan.cn:443/1838918272/"
+	// 	"8469473?auth_key=1729198020-1061263672-"
+	// 	"1838918272-eddcc68396d5c9adb5a3161ff973bf58",
+	// 	"a.exe", bytes_received, bytes_total,
+	// 	[](UpdateStatusInfo updateStatusInfo) {
+	// 		std::cout << "Downloading " << updateStatusInfo.CurrentFileName
+	// 				  << " " << updateStatusInfo.CurrentProgress << "\n";
+	// 	});
 
-	try {
-		async_simple::executors::SimpleExecutor ex(2);
-		auto res = async_simple::coro::syncAwait(a, &ex);
+	// try {
+	// 	async_simple::executors::SimpleExecutor ex(2);
+	// 	auto res = async_simple::coro::syncAwait(a, &ex);
 
-		std::cout << res.first.getStatus() << " " << res.first.getErrorMessage()
-				  << " " << res.second << "\n";
+	// 	std::cout << res.first.getStatus() << " " << res.first.getErrorMessage()
+	// 			  << " " << res.second << "\n";
 
-		Seele::Log::Shutdown();
-	} catch (std::exception &e) {
-		std::cerr << "Exception:" << e.what() << "\n";
-	}
+	// 	Seele::Log::Shutdown();
+	// } catch (std::exception &e) {
+	// 	std::cerr << "Exception:" << e.what() << "\n";
+	// }
+	// ApiRequest api("https://vip.123pan.cn", "TestApp", "TestChannel",
+	// 			   "Windows");
+
+	// ApiRequest api2("http://localhost:5275", "TestApp", "TestChannel",
+	// 				"Windows");
+	// auto signedLinkTask =
+	// 	api2.GetSignedDirectLink("https://vip.123pan.cn/1838918272/8494695");
+
+	// auto signedLink = async_simple::coro::syncAwait(signedLinkTask).second;
+
+	// nlohmann::json j = nlohmann::json::parse(signedLink);
+
+	// signedLink = j["signedUrl"];
+	// signedLink = signedLink.substr(25);
+
+	// auto task = api.DownloadFile(
+	// 	signedLink, "a.exe", [](UpdateStatusInfo updateStatusInfo) {
+	// 		std::cout << "Downloading " << updateStatusInfo.CurrentFileName
+	// 				  << " " << updateStatusInfo.CurrentProgress << "\n";
+	// 	});
+	// auto res = async_simple::coro::syncAwait(task);
+	// std::cout << res.first.getStatus() << " " << res.first.getErrorMessage()
+	// 		  << "\n";
+	// std::cout << res.second << "\n";
 }

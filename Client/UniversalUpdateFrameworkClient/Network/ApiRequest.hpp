@@ -508,7 +508,8 @@ public:
 
 	auto GetSignedDirectLink(std::string originUrl) {
 		std::string signedUrl =
-			std::format("/api/v1/SignUrl?url={}", originUrl);
+			std::format("/api/v1/GetSignedDirectLink?originUrl={}", originUrl);
+		return httpRequestGet(signedUrl);
 	}
 
 	auto DownloadFile(

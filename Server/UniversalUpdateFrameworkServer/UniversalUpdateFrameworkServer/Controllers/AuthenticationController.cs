@@ -30,7 +30,7 @@ public class AuthenticationController : ControllerBase
 
             try
             {
-                string newUrl = SignURL(originUrl, privateKey, uid, validDuration);
+                string newUrl = SignUrl(originUrl, privateKey, uid, validDuration);
                 Console.WriteLine(newUrl);
                 var response = new
                 {
@@ -52,7 +52,7 @@ public class AuthenticationController : ControllerBase
         }
     }
 
-    static string SignURL(string originUrl, string privateKey, ulong uid, TimeSpan validDuration)
+    private static string SignUrl(string originUrl, string privateKey, ulong uid, TimeSpan validDuration)
     {
         long ts = DateTimeOffset.UtcNow.Add(validDuration).ToUnixTimeSeconds(); // 有效时间戳
         int rInt = new Random().Next(); // 随机正整数
