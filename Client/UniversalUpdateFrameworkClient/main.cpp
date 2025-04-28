@@ -117,28 +117,28 @@ int main(int argc, char *argv[]) {
 	// } catch (std::exception &e) {
 	// 	std::cerr << "Exception:" << e.what() << "\n";
 	// }
-	// ApiRequest api("https://vip.123pan.cn", "TestApp", "TestChannel",
-	// 			   "Windows");
+	ApiRequest api("https://vip.123pan.cn", "TestApp", "TestChannel",
+				   "Windows");
 
-	// ApiRequest api2("http://localhost:5275", "TestApp", "TestChannel",
-	// 				"Windows");
-	// auto signedLinkTask =
-	// 	api2.GetSignedDirectLink("https://vip.123pan.cn/1838918272/8494695");
+	ApiRequest api2("http://localhost:5275", "TestApp", "TestChannel",
+					"Windows");
+	auto signedLinkTask =
+		api2.GetSignedDirectLink("https://vip.123pan.cn/1838918272/8494695");
 
-	// auto signedLink = async_simple::coro::syncAwait(signedLinkTask).second;
+	auto signedLink = async_simple::coro::syncAwait(signedLinkTask).second;
 
-	// nlohmann::json j = nlohmann::json::parse(signedLink);
+	nlohmann::json j = nlohmann::json::parse(signedLink);
 
-	// signedLink = j["signedUrl"];
-	// signedLink = signedLink.substr(25);
+	signedLink = j["signedUrl"];
+	signedLink = signedLink.substr(25);
 
-	// auto task = api.DownloadFile(
-	// 	signedLink, "a.exe", [](UpdateStatusInfo updateStatusInfo) {
-	// 		std::cout << "Downloading " << updateStatusInfo.CurrentFileName
-	// 				  << " " << updateStatusInfo.CurrentProgress << "\n";
-	// 	});
-	// auto res = async_simple::coro::syncAwait(task);
-	// std::cout << res.first.getStatus() << " " << res.first.getErrorMessage()
-	// 		  << "\n";
-	// std::cout << res.second << "\n";
+	auto task = api.DownloadFile(
+		signedLink, "a.exe", [](UpdateStatusInfo updateStatusInfo) {
+			std::cout << "Downloading " << updateStatusInfo.CurrentFileName
+					  << " " << updateStatusInfo.CurrentProgress << "\n";
+		});
+	auto res = async_simple::coro::syncAwait(task);
+	std::cout << res.first.getStatus() << " " << res.first.getErrorMessage()
+			  << "\n";
+	std::cout << res.second << "\n";
 }

@@ -2,7 +2,7 @@
 
 #include <TypeDefination/AppManifest.hpp>
 #include <TypeDefination/AppVersion.hpp>
-
+#include "DeleteFileForce.hpp"
 #include "Network/ApiRequest.hpp"
 #include "UpdateLogic/VerifyRePatchSetPermission.hpp"
 #include "md5.h"

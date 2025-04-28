@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include "DeleteFileForce.hpp"
 #include "Network/ApiRequest.hpp"
 #include "UpdateCore/TypeDefinition.hpp"
 #include "md5.h"

@@ -7,6 +7,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(ProjectHeader
         ../../Common/md5/md5.h
         ../../Common/util/util.hpp
+        ../../Common/processutil/DeleteFileForce.hpp
 
         ../../Generator/UniversalUpdateFrameworkGenerator/src/TypeDefination/AppVersion.hpp
         ../../Generator/UniversalUpdateFrameworkGenerator/src/TypeDefination/AppManifest.hpp

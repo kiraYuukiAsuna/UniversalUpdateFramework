@@ -5,7 +5,6 @@
 #include <TypeDefination/AppVersion.hpp>
 #include <TypeDefination/FullPackageManifest.hpp>
 #include <UpdateCore/UpdateStatus.hpp>
-#include <iostream>
 #include <string>
 #include <utility>
 
